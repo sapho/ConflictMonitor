@@ -1,91 +1,148 @@
-import rasterio
-import rasterio.plot
 import pyproj
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import os
 from osgeo import gdal
+import fnmatch
+from gdalconst import *
+from osgeo import osr
 
-def reproject(nir, filepath, image, img_data):
-    with rasterio.open(nir) as src:
-        src_transform = src.transform
-        dst_transform = src_transform*A.translation(
-        -src.width/2.0, -src.height/2.0)*A.scale(2.0)
-        data = src.read()
-        kwargs = src.meta
-        kwargs['transform'] = dst_transform
-        newPath = os.path.join(filepath,image, img_data,'zoomed_out_nir.tif')
-        with rasterio.open(newPath, 'w', **kwargs) as dst:
-            for i, band in enumerate(data, 1):
-                dest = np.zeros_like(band)
-                reproject(
-                    band,
-                    dest,
-                    src_transform=src_transform,
-                    src_crs=src.crs,
-                    dst_transform=dst_transform,
-                    dst_crs=src.crs,
-                    resampling=Resampling.nearest)
-                dst.write(dest, indexes=i)
+def resample(image,name_datum):
+    resampleBandPath = os.path.join(image,"IMG_DATA",name_datum + "B12.tif")
+    resampleBand = gdal.Open(resampleBandPath)
+    getBand = resampleBand.GetRasterBand(1)
+    outFile = os.path.join(image,"IMG_DATA",nameDatum + "resampleB12.tif")
+    result = gdal.Translate(outFile,resampleBandPath,format="GTiff",width=10980,height=10980,resampleAlg="nearest",outputType=gdal.GDT_Float32)
 
-def nbr(nir,swir):
+# Function to read the original file's projection:
+def GetGeoInfo(FileName):
+    SourceDS = gdal.Open(FileName, GA_ReadOnly)
+    xsize = SourceDS.RasterXSize
+    ysize = SourceDS.RasterYSize
+    GeoT = SourceDS.GetGeoTransform()
+    Projection = osr.SpatialReference()
+    Projection.ImportFromWkt(SourceDS.GetProjectionRef())
+    DataType = SourceDS.GetRasterBand(1).DataType
+    DataType = gdal.GetDataTypeName(DataType)
+    return xsize, ysize, GeoT, Projection, DataType
+
+# Function to write a new file.
+def CreateGeoTiff(Name, Array, driver, xsize, ysize, GeoT, Projection, DataType):
+    #if DataType == 'Float32':
+    DataType = gdal.GDT_Float32
+    NewFileName = Name
+    # Set up the dataset
+    DataSet = driver.Create(NewFileName, xsize, ysize, 1, DataType)
+            # the '1' is for band 1.
+    DataSet.SetGeoTransform(GeoT)
+    DataSet.SetProjection(Projection.ExportToWkt())
+    # Write the array
+    DataSet.GetRasterBand(1).WriteArray(Array)
+    DataSet.FlushCache()
+    return NewFileName
+
+def computeNBR(nir,swir):
     nbr = (nir - swir) / (nir + swir)
     return nbr
+    
+def readPath(image):
+    datum = image[11:27]
+    name = image[38:45]
+    nameDatum = name + datum
+    return nameDatum
+       
+def readBand(filepath,image,nameDatum,band):
+    band = os.path.join(filepath,image, 'IMG_DATA', nameDatum + band + '.tif')
+    print(band)
+    open_band = gdal.Open(band)
+    img = open_band.ReadAsArray()
+    img_float = img.astype(float)
+    return img_float
 
-def nbrOldNew():
-    oldNBRPath = os.path.join('F://','1MCASITS','test','S2A_MSIL1C_20180104T042151_N0206_R090_T46QDJ_20180104T074740.SAFE','IMG_DATA','T46QDJ_20180104T042151_NBR.PNG')
-    newNBRPath = os.path.join('F://','1MCASITS','test','S2B_MSIL1C_20180109T042139_N0206_R090_T46QDJ_20180109T144840.SAFE','IMG_DATA','T46QDJ_20180109T042139_NBR.PNG')
-    oldNBR = gdal.Open(oldNBRPath)
-    newNBR = gdal.Open(newNBRPath)
-    img_old = oldNBR.ReadAsArray()
-    img_new = newNBR.ReadAsArray()
-    result = img_old - img_new
-    format2 = "PNG"
-    driver = gdal.GetDriverByName(format2)
-    outPath = os.path.join('F://','1MCASITS','results','result_NBR.PNG')
-    outDataRaster = driver.CreateCopy(outPath,oldNBR,0)
-    outDataRaster.GetRasterBand(1).WriteArray(result)
-    #print result[[]]
+def callNBR(nir,swir,filepath,image,nameDatum,band):
+    band = os.path.join(filepath,image, 'IMG_DATA', nameDatum + band + '.tif')
+    open_band = gdal.Open(band)
+    result = computeNBR(nir,swir)
+    xsize,ysize,GeoT,Projection,DataType = GetGeoInfo(band)
+    format_out = "GTiff"
+    driver = gdal.GetDriverByName(format_out)
+    outPath = os.path.join(filepath,image, 'IMG_DATA', nameDatum + 'NBR.tif')
+    newFile = CreateGeoTiff(outPath,result,driver,xsize,ysize,GeoT,Projection,DataType)
+    return result
+
+def plot(filepath, image):
+    finalPath = os.path.join(filepath,image)
+    open_band = gdal.Open(finalPath)
+    result1 = open_band.ReadAsArray()
+    result = result1.astype(float)
     fig = plt.figure(figsize=(10, 10))
     fig.set_facecolor('white')
-    #plt.imshow(result, cmap=plt.cm.summer) # Typically the color map for NBR maps are the Red to Yellow to Green
     plt.colorbar(plt.imshow(result, cmap=plt.cm.summer))
     plt.title('NBR')
     plt.show()
+
+def datumCharsNBR(x):
+    return(x[7:15])
+
+def datumCharsArr(x):
+    return(x[11:19])
+
+def nbrOldNew(nbrDict,filepath):
+    for key in nbrDict:
+        if(key != len(nbrDict)):
+            oldNBRPath = os.path.join(filepath,nbrDict[key][1],'IMG_DATA',nbrDict[key][0])
+            newNBRPath = os.path.join(filepath,nbrDict[key+1][1],'IMG_DATA',nbrDict[key+1][0])
+            oldNBR = gdal.Open(oldNBRPath)
+            newNBR = gdal.Open(newNBRPath)
+            img_old = oldNBR.ReadAsArray()
+            img_new = newNBR.ReadAsArray()
+            img_oldFloat = img_old.astype(float)
+            img_newFloat = img_new.astype(float)
+            result = img_oldFloat - img_newFloat
+            nameDatum = readPath(nbrDict[key][1])
+            nameDatum2 = readPath(nbrDict[key+1][1])
+            xsize,ysize,GeoT,Projection,DataType = GetGeoInfo(oldNBRPath)
+            out_format = "GTiff"
+            driver = gdal.GetDriverByName(out_format)
+            filepath2 = filepath[:12]
+            outPath = os.path.join(filepath2,'results',nameDatum + nameDatum2 + 'result_NBR.tif')
+            newFile = CreateGeoTiff(outPath,result,driver,xsize,ysize,GeoT,Projection,DataType)
+        else:
+            print("All NBRs computed")
     
 
-print('Load images')
-
-filepath = os.path.join('F://','1MCASITS','test')
+cwd = os.getcwd()
+filepath = os.path.join(cwd,'test')
+filepath2 = os.path.join(cwd,'results')
 arr = os.listdir(filepath)
-print(arr)
+arr2 = os.listdir(filepath2)
+nbrArray = []
 
-nbrOldNew()
-##for image in arr:
-##    image = 'S2A_MSIL1C_20180104T042151_N0206_R090_T46QDJ_20180104T074740.SAFE'
-##    datum = image[11:27]
-##    name = image[38:45]
-##    nameDatum = name + datum
-##    nir = os.path.join(filepath, image, 'IMG_DATA', nameDatum + 'B08.PNG')
-##    #swir = os.path.join(filepath, image, 'IMG_DATA', nameDatum + 'B12.PNG')
-##    swir = os.path.join(filepath, image, 'IMG_DATA', nameDatum + 'B13.PNG')
-##    nir2 = gdal.Open(nir)
-##    swir2 = gdal.Open(swir)
-##    img_nir = nir2.ReadAsArray()
-##    img_swir = swir2.ReadAsArray()
-##    img_nir.astype(float)
-##    img_swir.astype(float)
-##    #reproject(nir,filepath,image,'IMG_DATA')
-##    #nir2 = os.path.join(filepath, image, 'IMG_DATA', nameDatum + 'zoomed_out_nir.PNG')
-##    result = nbr(img_nir,img_swir)
-##    format2 = "PNG"
-##    driver = gdal.GetDriverByName(format2)
-##    outPath = os.path.join(filepath, image, 'IMG_DATA', nameDatum + 'NBR.PNG')
-##    outDataRaster = driver.CreateCopy(outPath,nir2,0)
-##    outDataRaster.GetRasterBand(1).WriteArray(result)
-##    fig = plt.figure(figsize=(10, 10))
-##    fig.set_facecolor('white')
-##    plt.imshow(result, cmap='RdYlGn') # Typically the color map for NBR maps are the Red to Yellow to Green
-##    plt.title('NBR')
-##    plt.show()
+for image in arr:
+    path = readPath(image)
+    join = path+"NBR.tif"
+    nbrArray.append(join)
+    nir = readBand(filepath,image,path,"B08")
+    swir = readBand(filepath,image,path,"resampleB12")
+    call_nbr = callNBR(nir,swir,filepath,image,path,"B08")
+
+sortedNBR = sorted(nbrArray, key = datumCharsNBR)
+sortedArr = sorted(arr, key = datumCharsArr)
+
+nbrDict = {}
+counter = 1
+for nbr, path in zip(sortedNBR,sortedArr):
+    nbrDict[counter] = (nbr,path)
+    counter += 1
+
+nbrOldNew(nbrDict,filepath)
+plot(filepath2,arr2[0])
+
+
+
+
+
+
+
+
