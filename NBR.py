@@ -8,15 +8,21 @@ import fnmatch
 from gdalconst import *
 from osgeo import osr
 
-def resample(image,name_datum):
-    resampleBandPath = os.path.join(image,"IMG_DATA",name_datum + "B12.tif")
+def resample(filepath,image,name_datum):
+    print("in resample")
+    resampleBandPath = os.path.join(filepath,image,"IMG_DATA",name_datum + "B12.tif")
     resampleBand = gdal.Open(resampleBandPath)
     getBand = resampleBand.GetRasterBand(1)
-    outFile = os.path.join(image,"IMG_DATA",nameDatum + "resampleB12.tif")
-    result = gdal.Translate(outFile,resampleBandPath,format="GTiff",width=10980,height=10980,resampleAlg="nearest",outputType=gdal.GDT_Float32)
+    outFile = os.path.join(filepath, image,"IMG_DATA",name_datum + "resampleB12.tif")
+    if(not(os.path.isfile(outFile))):
+        result = gdal.Translate(outFile,resampleBandPath,format="GTiff",width=10980,height=10980,resampleAlg="nearest",outputType=gdal.GDT_Float32)
+        print("resampled an image")
+    else:
+        print("image" + outFile + " exists already")
 
 # Function to read the original file's projection:
 def GetGeoInfo(FileName):
+    print("in getgeoinfo")
     SourceDS = gdal.Open(FileName, GA_ReadOnly)
     xsize = SourceDS.RasterXSize
     ysize = SourceDS.RasterYSize
@@ -29,38 +35,48 @@ def GetGeoInfo(FileName):
 
 # Function to write a new file.
 def CreateGeoTiff(Name, Array, driver, xsize, ysize, GeoT, Projection, DataType):
+    print("in creategeotiff")
     #if DataType == 'Float32':
     DataType = gdal.GDT_Float32
     NewFileName = Name
-    # Set up the dataset
-    DataSet = driver.Create(NewFileName, xsize, ysize, 1, DataType)
-            # the '1' is for band 1.
-    DataSet.SetGeoTransform(GeoT)
-    DataSet.SetProjection(Projection.ExportToWkt())
-    # Write the array
-    DataSet.GetRasterBand(1).WriteArray(Array)
-    DataSet.FlushCache()
-    return NewFileName
+    if(not(os.path.isfile(NewFileName))):
+        # Set up the dataset
+        DataSet = driver.Create(NewFileName, xsize, ysize, 1, DataType) # the '1' is for band 1.
+        DataSet.SetGeoTransform(GeoT)
+        DataSet.SetProjection(Projection.ExportToWkt())
+        # Write the array
+        DataSet.GetRasterBand(1).WriteArray(Array)
+        DataSet.FlushCache()
+        print("new dataset created")
+        return NewFileName
+    else:
+        print("file" + NewFileName + " already exists")
 
 def computeNBR(nir,swir):
+    print("in computeNBR")
     nbr = (nir - swir) / (nir + swir)
     return nbr
     
 def readPath(image):
+    print("in readPath")
     datum = image[11:27]
     name = image[38:45]
     nameDatum = name + datum
     return nameDatum
        
 def readBand(filepath,image,nameDatum,band):
+    print("in readBand")
     band = os.path.join(filepath,image, 'IMG_DATA', nameDatum + band + '.tif')
-    print(band)
-    open_band = gdal.Open(band)
-    img = open_band.ReadAsArray()
-    img_float = img.astype(float)
-    return img_float
+    if(not(os.path.isfile(band))):
+        open_band = gdal.Open(band)
+        img = open_band.ReadAsArray()
+        img_float = img.astype(float)
+        return img_float
+    else:
+        print("file"+ band + " is already existing")
 
 def callNBR(nir,swir,filepath,image,nameDatum,band):
+    print("in callNBR")
     band = os.path.join(filepath,image, 'IMG_DATA', nameDatum + band + '.tif')
     open_band = gdal.Open(band)
     result = computeNBR(nir,swir)
@@ -68,10 +84,15 @@ def callNBR(nir,swir,filepath,image,nameDatum,band):
     format_out = "GTiff"
     driver = gdal.GetDriverByName(format_out)
     outPath = os.path.join(filepath,image, 'IMG_DATA', nameDatum + 'NBR.tif')
-    newFile = CreateGeoTiff(outPath,result,driver,xsize,ysize,GeoT,Projection,DataType)
-    return result
+    if(not(os.path.isfile(outPath))):
+        newFile = CreateGeoTiff(outPath,result,driver,xsize,ysize,GeoT,Projection,DataType)
+        print("NBR computed")
+        return result
+    else:
+        print("NBR with path" + outPath + " already exists")
 
 def plot(filepath, image):
+    print("in plot")
     finalPath = os.path.join(filepath,image)
     open_band = gdal.Open(finalPath)
     result1 = open_band.ReadAsArray()
@@ -89,6 +110,7 @@ def datumCharsArr(x):
     return(x[11:19])
 
 def nbrOldNew(nbrDict,filepath):
+    print("in nbrOldNew")
     for key in nbrDict:
         if(key != len(nbrDict)):
             oldNBRPath = os.path.join(filepath,nbrDict[key][1],'IMG_DATA',nbrDict[key][0])
@@ -121,11 +143,13 @@ nbrArray = []
 
 for image in arr:
     path = readPath(image)
-    join = path+"NBR.tif"
-    nbrArray.append(join)
+    resample(filepath,image,path)
     nir = readBand(filepath,image,path,"B08")
     swir = readBand(filepath,image,path,"resampleB12")
-    call_nbr = callNBR(nir,swir,filepath,image,path,"B08")
+    if(nir and swir is not None):
+        call_nbr = callNBR(nir,swir,filepath,image,path,"B08")
+        join = path+"NBR.tif"
+        nbrArray.append(join)
 
 sortedNBR = sorted(nbrArray, key = datumCharsNBR)
 sortedArr = sorted(arr, key = datumCharsArr)
@@ -137,7 +161,7 @@ for nbr, path in zip(sortedNBR,sortedArr):
     counter += 1
 
 nbrOldNew(nbrDict,filepath)
-plot(filepath2,arr2[0])
+##plot(filepath2,arr2[0])
 
 
 
