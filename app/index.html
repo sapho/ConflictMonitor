@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Conflict Monitor</title>
+</head>
+<body>
+<form id="aoi">
+    Area of interest:<br>
+    xMin <input type="number" name="xMin"><br>
+    xMax <input type="number" name="xMax"><br>
+    yMin <input type="number" name="yMin"><br>
+    yMax <input type="number" name="yMax"><br>
+    <br>
+    Time range:<br>
+    Start: <input type="date" name="startdate"><br>
+    End: <input type="date" name="enddate"><br><br>
+    Platform
+    <select name="sentinel">
+        <option value="Sentinel-1">Sentinel-1</option>
+        <option value="Sentinel-2">Sentinel-2</option>
+        <option value="Sentinel-3">Sentinel-3</option>
+    </select><br>
+    Preprocessing level
+    <select name="level">
+        <option value="Level-1C">Level-1C</option>
+        <option value="Level-2A">Level-2A</option>
+    </select><br><br>
+    <button type="submit">Submit</button>
+</form>
+<form>
+    Cloudcoverage <input type="number" min="0" max="100" name="cloudcoverage"><br><br>
+    Login Copernicus Hub: <br>
+    Username: <input type="text" name="username"><br>
+    Password: <input type="password" name="password"><br><br>
+    Output datadir <input type="text" name="outdatadir"><br>
+
+
+</form>
+</body>
+</html>
