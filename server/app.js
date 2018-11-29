@@ -1,87 +1,72 @@
 let express = require('express');
 let path = require('path');
-let cookieParser = require('cookie-parser');
+let logger = require('morgan');
+// let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
-let exphbs = require('express-handlebars');
-let expressValidator = require('express-validator');
-let flash = require('connect-flash');
-let session = require('express-session');
-let passport = require('passport');
-let LocalStrategy = require('passport-local').Strategy;
-let mongo = require('mongodb');
-let mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost/loginapp');
-let db = mongoose.connection;
 
-let routes = require('./routes/index');
-let users = require('./routes/users');
-
-// Init App
 let app = express();
-
-// View Engine
-app.set('views', path.join(__dirname, 'views'));
-app.engine('handlebars', exphbs({defaultLayout:'layout'}));
-app.set('view engine', 'handlebars');
-
-// BodyParser Middleware
+/* give access to following folders */
+app.use(express.static("../server"));
+app.use(express.static("../app"));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(bodyParser.urlencoded({extended: true}));
+//app.use(express.static(""));  //hier Pfad zu metadaten einfügen
+app.use(logger('combined'));
 
-// Set Static Folder
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Express Session
-app.use(session({
-    secret: 'secret',
-    saveUninitialized: true,
-    resave: true
-}));
-
-// Passport init
-app.use(passport.initialize());
-app.use(passport.session());
-
-// Express Validator
-app.use(expressValidator({
-  errorFormatter: function(param, msg, value) {
-      let namespace = param.split('.')
-      , root    = namespace.shift()
-      , formParam = root;
-
-    while(namespace.length) {
-      formParam += '[' + namespace.shift() + ']';
-    }
-    return {
-      param : formParam,
-      msg   : msg,
-      value : value
-    };
-  }
-}));
-
-// Connect Flash
-app.use(flash());
-
-// Global lets
+/* http routing. */
+// log code which is executed on every request
 app.use(function (req, res, next) {
-  res.locals.success_msg = req.flash('success_msg');
-  res.locals.error_msg = req.flash('error_msg');
-  res.locals.error = req.flash('error');
-  res.locals.user = req.user || null;
-  next();
+    console.log(req.method + ' ' + req.url + ' was requested by ' + req.connection.remoteAddress);
+    res.header('Access-Control-Allow-Origin', '*'); // allow CORS
+    next();
 });
 
 
 
-app.use('/', routes);
-app.use('/users', users);
 
-// Set Port
-app.set('port', (process.env.PORT || 3000));
+/**
+ * @desc AJAX.GET on server for sending a search request
+ *       takes an array with search parameters
+ *       and passes them to the search function
+ *       url format: /aoi
+ * @return metadata or error
+ */
+app.get('/aoi', function (req, res) {
+    console.log("search string received");
+    let xMin = req.query.xMin;
+    let xMax = req.query.xMax;
+    let yMin = req.query.yMin;
+    let yMax = req.query.yMax;
+    let startdate = req.query.startdate;
+    let enddate = req.query.enddate;
+    let sentinel = req.query.sentinel;
+    let level = req.query.level;
+    let searchparams = [xMin, xMax, yMin, yMax, startdate, enddate, sentinel, level];
+    console.log(searchparams);
+    /*let erg = search(searchparams); //adjust path to search function
+    console.log(erg[0].footprint);
+    if(erg !== []){
+        res.json(erg);
+    } else res.send("nothing found")*/
 
-app.listen(app.get('port'), function(){
-	console.log('Server started on port '+app.get('port'));
 });
+
+app.use(function (req, res, next) {
+    let err = new Error('Not Found');
+    err.status = 404;
+    next(err);
+});
+
+// error handler
+app.use(function (err, req, res, next) {
+    // set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
+    // render the error page
+    res.status(err.status || 500);
+    res.send('Error Status 500');
+});
+
+
+module.exports = app;
