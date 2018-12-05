@@ -26,7 +26,7 @@
 
 import numpy as np
 import os
-from osgeo import gdal,ogr
+from osgeo import gdal,osr
 import copy
 from PIL import Image
 import time
@@ -34,8 +34,9 @@ import time
 def loadTifAsArray(image, filepath):
     print("Loading "+image)
     path = os.path.join(filepath,image)
-    tif = gdal.Open(path)
-    tifArray = tif.ReadAsArray()
+    img = gdal.Open(path)
+    tifArray = img.ReadAsArray()
+
     return tifArray
 
 def subtract(image1, image2):
@@ -47,24 +48,59 @@ def subtract(image1, image2):
     sub = copy.deepcopy(image1)
     rows = len(sub)    
     cols = len(sub[0])
-    print(sub[0][0])
 
     for px in range(cols):
         for py in range(rows):
             #We are only interested in the change, not wether or not the change is positive or negative
             sub[px][py] = abs(image1[px][py] - image2[px][py]) 
-    
-    print(sub[0][0])
-
+    print("sub min and max values:")
+    print(sub.min())
+    print(sub.max())
     return sub
 
-def createTif(image):
-    """
-    TODO:
-        Generate Tif file from generated subtracted image
-    """ 
-    return True
+def GetGeoInfo(originalTif):
+    print("in getgeoinfo")
+    SourceDS = originalTif
+    xsize = SourceDS.RasterXSize
+    ysize = SourceDS.RasterYSize
+    GeoT = SourceDS.GetGeoTransform()
+    Projection = osr.SpatialReference()
+    Projection.ImportFromWkt(SourceDS.GetProjectionRef())
+    DataType = SourceDS.GetRasterBand(1).DataType
+    DataType = gdal.GetDataTypeName(DataType)
+    return xsize, ysize, GeoT, Projection, DataType
 
+def CreateGeoTiff(array, driver, xsize, ysize, GeoT, Projection, DataType):
+    print("in creategeotiff")
+    #if DataType == 'Float32':
+    print(array)
+    DataType = gdal.GDT_Float32
+    NewFileName = "B08_RESUUULT_25.tif"
+    if(not(os.path.isfile(NewFileName))):
+        # Set up the dataset
+        DataSet = driver.Create(NewFileName, xsize, ysize, 1, DataType) # the '1' is for band 1.
+        DataSet.SetGeoTransform(GeoT)
+        DataSet.SetProjection(Projection.ExportToWkt())
+        # Write the array
+        DataSet.GetRasterBand(1).WriteArray(array)
+        DataSet.FlushCache()
+        print("new dataset created")
+        return NewFileName
+    else:
+        print("file" + NewFileName + " already exists")
+
+
+def createTif(sub, originalTif):
+    format_out = "GTiff"
+    driver = gdal.GetDriverByName(format_out)
+    result = sub
+    xsize, ysize, GeoT, Projection, DataType = GetGeoInfo(originalTif)
+    newFile = CreateGeoTiff(result,driver,xsize,ysize,GeoT,Projection,DataType)
+
+
+def treshold(array):
+    result = array[array >= 25] = 0
+    return result;
 
 
 start_time = time.time()
@@ -72,14 +108,22 @@ start_time = time.time()
 cwd = os.getcwd()
 filepath = os.path.join(cwd,'tifs')
 arr = os.listdir(filepath)
-tifList = []
+print(arr)
+tifArrays = []
+originalTif = gdal.Open(os.path.join(filepath, arr[0]), gdal.GA_ReadOnly)
 
 for image in arr:
-    tifList.append(loadTifAsArray(image, filepath))
+    tifArray = loadTifAsArray(image, filepath)
+    tifArrays.append(tifArray)
+
 print("--- %s seconds for loading the images ---" % (time.time() - start_time))
 
-sub = subtract(tifList[0], tifList[1])
+sub = subtract(tifArrays[0], tifArrays[1])
 print("--- %s seconds for loading and subtracting ---" % (time.time() - start_time))
 
-img = createTif(sub)
-print("--- %s seconds for loading, subtracting and tif creation ---" % (time.time() - start_time))
+subTresh = treshold(sub)
+print("--- %s seconds for loading, subtracting and tresholding ---" % (time.time() - start_time))
+
+createTif(subTresh, originalTif)
+#print("--- %s seconds for everything ---" % (time.time() - start_time))
+
