@@ -1,29 +1,3 @@
-# import cv2 as cv
-# import numpy as np
-# from matplotlib import pyplot as plt
-
-# #GRAYSCALE ONLY FOR TESTING
-# #Test with person appearing in image
-# img1 = cv.imread("images/1.jpg", 0)
-# img2 = cv.imread("images/2.jpg", 0)
-# img3 = cv.subtract(img1, img2)
-# ret, thresh1 = cv.threshold(img3, 0, 255, cv.THRESH_TOZERO)
-
-
-# #Test with satelite image of japan landslide changes after earthquake
-# jl_before = cv.imread("images/japan_earthquake_before.jpg",0)
-# jl_after = cv.imread("images/japan_earthquake_after.jpg",0)
-# jl_subtraction = cv.subtract(jl_after, jl_before)
-# ts,thresh2 = cv.threshold(jl_subtraction,0,255,cv.THRESH_TOZERO)
-
-# images = [img1, img2,img3 , thresh1, jl_before, jl_after,jl_subtraction, thresh2]
-# titles = ["Image1", "Image2","Subtraction", "+ Treshold", "Japan_Before", "Japan_After","Subtraction", "+ Treshold" ]
-# for i in range(8):
-#     plt.subplot(2,4,i+1),plt.imshow(images[i],'gray')
-#     plt.title(titles[i])
-#     plt.xticks([]),plt.yticks([])
-# plt.show()
-
 import numpy as np
 import os
 from osgeo import gdal,osr
@@ -31,14 +5,25 @@ import copy
 from PIL import Image
 import time
 
+"""Function for loading a .tif file as an array.
+
+:param image:       Name of the .tif file to be loaded.
+:param filepath:    Path to the tifs directory
+:returns: 2D Array with .tif pixel values.
+"""
 def loadTifAsArray(image, filepath):
     print("Loading "+image)
     path = os.path.join(filepath,image)
     img = gdal.Open(path)
     tifArray = img.ReadAsArray()
-
     return tifArray
 
+"""Function for subtracting getting a change mask of two images by subtracting corresponding pixel values and seting them in a new 2D array.
+
+:param image1:      Array with pixelvalues of the first .tif
+:param image2:      Array with pixelvalues of the second .tif
+:returns: 2D Array with calculated pixel differences
+"""
 def subtract(image1, image2):
     # Copy of one of the images is used for saving calculated values
     print("Subtracting ...")
@@ -52,11 +37,10 @@ def subtract(image1, image2):
     for px in range(cols):
         for py in range(rows):
             #We are only interested in the change, not wether or not the change is positive or negative
-            sub[px][py] = abs(image1[px][py] - image2[px][py]) 
-    print("sub min and max values:")
-    print(sub.min())
-    print(sub.max())
+            sub[px,py] = abs(image1[px][py] - image2[px][py]) 
+
     return sub
+
 
 def GetGeoInfo(originalTif):
     print("in getgeoinfo")
@@ -70,37 +54,52 @@ def GetGeoInfo(originalTif):
     DataType = gdal.GetDataTypeName(DataType)
     return xsize, ysize, GeoT, Projection, DataType
 
-def CreateGeoTiff(array, driver, xsize, ysize, GeoT, Projection, DataType):
+def CreateGeoTiff(result, driver, xsize, ysize, GeoT, Projection, DataType, thresholdLimit):
     print("in creategeotiff")
     #if DataType == 'Float32':
-    print(array)
     DataType = gdal.GDT_Float32
-    NewFileName = "B08_RESUUULT_25.tif"
+    NewFileName = "B08_RESULT_T_"+str(thresholdLimit)+".tif"
+    print(result.shape)
     if(not(os.path.isfile(NewFileName))):
         # Set up the dataset
         DataSet = driver.Create(NewFileName, xsize, ysize, 1, DataType) # the '1' is for band 1.
         DataSet.SetGeoTransform(GeoT)
         DataSet.SetProjection(Projection.ExportToWkt())
         # Write the array
-        DataSet.GetRasterBand(1).WriteArray(array)
+        DataSet.GetRasterBand(1).WriteArray(result)
         DataSet.FlushCache()
         print("new dataset created")
         return NewFileName
     else:
         print("file" + NewFileName + " already exists")
 
+"""Function for creating a new .Tif file.
 
-def createTif(sub, originalTif):
+:param sub:             2D array with calculated pixel differences
+:param originalTif:     Unprocessed .tif file, read via gdal.Open(). Used for getting all geo data
+:returns: 2D Array with calculated pixel differences
+"""
+def createTif(sub, originalTif, thresholdLimit):
     format_out = "GTiff"
     driver = gdal.GetDriverByName(format_out)
     result = sub
     xsize, ysize, GeoT, Projection, DataType = GetGeoInfo(originalTif)
-    newFile = CreateGeoTiff(result,driver,xsize,ysize,GeoT,Projection,DataType)
+    newFile = CreateGeoTiff(result,driver,xsize,ysize,GeoT,Projection,DataType, thresholdLimit)
+    return newFile
 
+"""Function for thresholding a 2D array.
 
-def treshold(array):
-    result = array[array >= 25] = 0
-    return result;
+:param array:       2D array with calculated pixel differences
+:returns: 2D Array with thresholded pixel differences
+"""
+def treshold(array, thresholdLimit):
+    result = (array > thresholdLimit) * array
+    """
+    TODO:
+        Find a good threshold value !!
+    """
+    return result
+
 
 
 start_time = time.time()
@@ -109,21 +108,21 @@ cwd = os.getcwd()
 filepath = os.path.join(cwd,'tifs')
 arr = os.listdir(filepath)
 print(arr)
+thresholdLimit = 500
 tifArrays = []
 originalTif = gdal.Open(os.path.join(filepath, arr[0]), gdal.GA_ReadOnly)
 
 for image in arr:
     tifArray = loadTifAsArray(image, filepath)
     tifArrays.append(tifArray)
-
 print("--- %s seconds for loading the images ---" % (time.time() - start_time))
 
 sub = subtract(tifArrays[0], tifArrays[1])
 print("--- %s seconds for loading and subtracting ---" % (time.time() - start_time))
 
-subTresh = treshold(sub)
+subTresh = treshold(sub, thresholdLimit)
 print("--- %s seconds for loading, subtracting and tresholding ---" % (time.time() - start_time))
 
-createTif(subTresh, originalTif)
-#print("--- %s seconds for everything ---" % (time.time() - start_time))
+newTif = createTif(subTresh, originalTif, thresholdLimit)
+print("--- %s seconds for everything ---" % (time.time() - start_time))
 
