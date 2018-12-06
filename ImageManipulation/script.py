@@ -30,20 +30,21 @@ def subtract(image1, image2):
     #Cast to float32 because in uint16 images, negative numbers "wrap around" back to the maximal value.
     image1 = np.array(image1).astype(np.float32)
     image2 = np.array(image2).astype(np.float32)
-    sub = copy.deepcopy(image1)
-    rows = len(sub)    
-    cols = len(sub[0])
 
-    for px in range(cols):
-        for py in range(rows):
-            #We are only interested in the change, not wether or not the change is positive or negative
-            sub[px,py] = abs(image1[px][py] - image2[px][py]) 
-
-    return sub
-
+    if image1.shape == image2.shape : 
+        sub = copy.deepcopy(image1)
+        rows = len(sub)    
+        cols = len(sub[0])
+        for px in range(cols):
+            for py in range(rows):
+                #We are only interested in the change, not wether or not the change is positive or negative
+                sub[px,py] = abs(image1[px][py] - image2[px][py]) 
+        return sub
+    else:
+        print("Images don't have the same dimensions")
 
 def GetGeoInfo(originalTif):
-    print("in getgeoinfo")
+    print("-- GeoInfo --")
     SourceDS = originalTif
     xsize = SourceDS.RasterXSize
     ysize = SourceDS.RasterYSize
@@ -55,7 +56,7 @@ def GetGeoInfo(originalTif):
     return xsize, ysize, GeoT, Projection, DataType
 
 def CreateGeoTiff(result, driver, xsize, ysize, GeoT, Projection, DataType, thresholdLimit):
-    print("in creategeotiff")
+    print("-- Creating GeoTiff --")
     #if DataType == 'Float32':
     DataType = gdal.GDT_Float32
     NewFileName = "B08_RESULT_T_"+str(thresholdLimit)+".tif"
