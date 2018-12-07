@@ -55,12 +55,18 @@ def GetGeoInfo(originalTif):
     DataType = gdal.GetDataTypeName(DataType)
     return xsize, ysize, GeoT, Projection, DataType
 
-def CreateGeoTiff(result, driver, xsize, ysize, GeoT, Projection, DataType, thresholdLimit):
+def CreateGeoTiff(path,result, driver, xsize, ysize, GeoT, Projection, DataType, thresholdLimit):
     print("-- Creating GeoTiff --")
     #if DataType == 'Float32':
     DataType = gdal.GDT_Float32
-    NewFileName = "B08_RESULT_T_"+str(thresholdLimit)+".tif"
-    print(result.shape)
+    filename = "B08_RESULT_T_"+str(thresholdLimit)+".tif"
+    NewFileName = os.path.join(path,filename)
+
+    #checks if result directory exists and creates it if not
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    #checks if file already exists
     if(not(os.path.isfile(NewFileName))):
         # Set up the dataset
         DataSet = driver.Create(NewFileName, xsize, ysize, 1, DataType) # the '1' is for band 1.
@@ -80,12 +86,12 @@ def CreateGeoTiff(result, driver, xsize, ysize, GeoT, Projection, DataType, thre
 :param originalTif:     Unprocessed .tif file, read via gdal.Open(). Used for getting all geo data
 :returns: 2D Array with calculated pixel differences
 """
-def createTif(sub, originalTif, thresholdLimit):
+def createTif(sub, originalTif, thresholdLimit, resultpath):
     format_out = "GTiff"
     driver = gdal.GetDriverByName(format_out)
     result = sub
     xsize, ysize, GeoT, Projection, DataType = GetGeoInfo(originalTif)
-    newFile = CreateGeoTiff(result,driver,xsize,ysize,GeoT,Projection,DataType, thresholdLimit)
+    newFile = CreateGeoTiff(resultpath,result,driver,xsize,ysize,GeoT,Projection,DataType,thresholdLimit)
     return newFile
 
 """Function for thresholding a 2D array.
@@ -107,6 +113,7 @@ start_time = time.time()
 
 cwd = os.getcwd()
 filepath = os.path.join(cwd,'tifs')
+resultpath = os.path.join(cwd,'result')
 arr = os.listdir(filepath)
 print(arr)
 thresholdLimit = 500
@@ -122,8 +129,9 @@ sub = subtract(tifArrays[0], tifArrays[1])
 print("--- %s seconds for loading and subtracting ---" % (time.time() - start_time))
 
 subTresh = treshold(sub, thresholdLimit)
+
 print("--- %s seconds for loading, subtracting and tresholding ---" % (time.time() - start_time))
 
-newTif = createTif(subTresh, originalTif, thresholdLimit)
+newTif = createTif(subTresh, originalTif, thresholdLimit, resultpath)
 print("--- %s seconds for everything ---" % (time.time() - start_time))
 

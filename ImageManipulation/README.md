@@ -6,8 +6,9 @@
 │   ├── tifs (exactly 2 .tifs inside)
 │   │   ├── *tif1.tif
 │   │   ├── *tif2.tif
+│   ├── result (**Generated on script.py if not already existing)
+│   │   ├── *result.tif (**Generated on script.py execution)
 │   ├── script.py
-│   ├── RESULT.tif (will be generated where script.py is located)
 ```
 
 ### Usage
