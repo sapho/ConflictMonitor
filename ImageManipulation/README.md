@@ -12,7 +12,14 @@
 ```
 
 ### Usage
-```sh
+```bash
 $ cd ImageManipulation
 $ python3 script.py
+```
+
+### Treshold
+If you want to change the treshold limit, look for the following line in the script.py and change the value accordingly.
+
+```python
+thresholdLimit = 500
 ```
