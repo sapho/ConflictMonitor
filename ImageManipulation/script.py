@@ -1,9 +1,12 @@
-import numpy as np
 import os
-from osgeo import gdal,osr
-import copy
-from PIL import Image
 import time
+import copy
+import numpy as np
+from osgeo import gdal,osr
+from PIL import Image
+from scipy.ndimage import median_filter
+
+
 
 """Function for loading a .tif file as an array.
 
@@ -18,7 +21,7 @@ def loadTifAsArray(image, filepath):
     tifArray = img.ReadAsArray()
     return tifArray
 
-"""Function for subtracting getting a change mask of two images by subtracting corresponding pixel values and seting them in a new 2D array.
+"""Function for getting a change mask of two images by subtracting corresponding pixel values and seting them in a new 2D array.
 
 :param image1:      Array with pixelvalues of the first .tif
 :param image2:      Array with pixelvalues of the second .tif
@@ -56,6 +59,7 @@ def GetGeoInfo(originalTif):
     return xsize, ysize, GeoT, Projection, DataType
 
 def CreateGeoTiff(path,result, driver, xsize, ysize, GeoT, Projection, DataType, thresholdLimit):
+
     print("-- Creating GeoTiff --")
     #if DataType == 'Float32':
     DataType = gdal.GDT_Float32
@@ -64,6 +68,7 @@ def CreateGeoTiff(path,result, driver, xsize, ysize, GeoT, Projection, DataType,
 
     #checks if result directory exists and creates it if not
     if not os.path.exists(path):
+        print("Creating Result directory...")
         os.makedirs(path)
 
     #checks if file already exists
@@ -78,7 +83,7 @@ def CreateGeoTiff(path,result, driver, xsize, ysize, GeoT, Projection, DataType,
         print("new dataset created")
         return NewFileName
     else:
-        print("file" + NewFileName + " already exists")
+        print("#ERROR: file" + NewFileName + " already exists")
 
 """Function for creating a new .Tif file.
 
@@ -100,12 +105,23 @@ def createTif(sub, originalTif, thresholdLimit, resultpath):
 :returns: 2D Array with thresholded pixel differences
 """
 def treshold(array, thresholdLimit):
+    print("Treshold...")
     result = (array > thresholdLimit) * array
     """
     TODO:
         Find a good threshold value !!
     """
     return result
+
+"""
+TODO:
+    FILTER OUTLIERES
+"""
+def filter(array, limit):
+    print("Median-Filter...")
+    filteredImg = np.array(median_filter(array, size=limit)).astype(np.float32)
+    return filteredImg
+
 
 
 
@@ -116,7 +132,8 @@ filepath = os.path.join(cwd,'tifs')
 resultpath = os.path.join(cwd,'result')
 arr = os.listdir(filepath)
 print(arr)
-thresholdLimit = 500
+thresholdLimit = 2000
+filterLimit = 4
 tifArrays = []
 originalTif = gdal.Open(os.path.join(filepath, arr[0]), gdal.GA_ReadOnly)
 
@@ -129,9 +146,10 @@ sub = subtract(tifArrays[0], tifArrays[1])
 print("--- %s seconds for loading and subtracting ---" % (time.time() - start_time))
 
 subTresh = treshold(sub, thresholdLimit)
-
 print("--- %s seconds for loading, subtracting and tresholding ---" % (time.time() - start_time))
 
-newTif = createTif(subTresh, originalTif, thresholdLimit, resultpath)
-print("--- %s seconds for everything ---" % (time.time() - start_time))
+subFiltered = filter(subTresh, filterLimit)
+print("--- %s seconds for loading, subtracting, tresholding and filtering---" % (time.time() - start_time))
 
+newTif = createTif(subFiltered, originalTif, thresholdLimit, resultpath)
+print("--- %s seconds for everything ---" % (time.time() - start_time))
