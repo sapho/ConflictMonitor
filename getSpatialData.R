@@ -1,3 +1,10 @@
+## Install packages
+install.packages("devtools")
+devtools::install_github("16EAGLE/getSpatialData")
+install.packages("raster")
+install.packages("sf")
+install.packages("sp")
+
 ## Load packages
 library(getSpatialData)
 library(raster)
@@ -25,7 +32,7 @@ platform <- "Sentinel-2" #or "Sentinel-1" or "Sentinel-3"
 
 ## set login credentials and archive directory
 login_CopHub(username = "sapho") #asks for password or define 'password'
-set_archive("C:/UNI/WS 2018-19/Monitoring Conflict Areas with Satellite Image Time Series/")
+set_archive("/data/raw")
 
 ## Use getSentinel_query to search for data (using the session AOI)
 records <- getSentinel_query(time_range = time_range, platform = platform)
