@@ -4,3 +4,7 @@
 *.json
 
 *.tif
+
+*.pyc
+
+ImageManipulation/testing.py

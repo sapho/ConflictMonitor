@@ -5,11 +5,11 @@ import numpy as np
 from osgeo import gdal,osr
 from PIL import Image
 from scipy.ndimage import median_filter
+import utils
 
 
 
 """Function for loading a .tif file as an array.
-
 :param image:       Name of the .tif file to be loaded.
 :param filepath:    Path to the tifs directory
 :returns: 2D Array with .tif pixel values.
@@ -21,8 +21,14 @@ def loadTifAsArray(image, filepath):
     tifArray = img.ReadAsArray()
     return tifArray
 
-"""Function for getting a change mask of two images by subtracting corresponding pixel values and seting them in a new 2D array.
+def hist_matching(img1, img2):
+    print("Histogram-matching...") 
+    source = img1
+    template = img2
+    result = utils.hist_match(source, template)
+    return result
 
+"""Function for getting a change mask of two images by subtracting corresponding pixel values and seting them in a new 2D array.
 :param image1:      Array with pixelvalues of the first .tif
 :param image2:      Array with pixelvalues of the second .tif
 :returns: 2D Array with calculated pixel differences
@@ -41,7 +47,7 @@ def subtract(image1, image2):
         for px in range(cols):
             for py in range(rows):
                 #We are only interested in the change, not wether or not the change is positive or negative
-                sub[px,py] = abs(image1[px][py] - image2[px][py]) 
+                sub[px,py] = (abs(image1[px][py] - image2[px][py])) / (image1[px][py] + image2[px][py])
         return sub
     else:
         print("Images don't have the same dimensions")
@@ -86,7 +92,6 @@ def CreateGeoTiff(path,result, driver, xsize, ysize, GeoT, Projection, DataType,
         print("#ERROR: file" + NewFileName + " already exists")
 
 """Function for creating a new .Tif file.
-
 :param sub:             2D array with calculated pixel differences
 :param originalTif:     Unprocessed .tif file, read via gdal.Open(). Used for getting all geo data
 :returns: 2D Array with calculated pixel differences
@@ -100,7 +105,6 @@ def createTif(sub, originalTif, thresholdLimit, resultpath):
     return newFile
 
 """Function for thresholding a 2D array.
-
 :param array:       2D array with calculated pixel differences
 :returns: 2D Array with thresholded pixel differences
 """
@@ -123,8 +127,6 @@ def filter(array, limit):
     return filteredImg
 
 
-
-
 start_time = time.time()
 
 cwd = os.getcwd()
@@ -132,8 +134,8 @@ filepath = os.path.join(cwd,'tifs')
 resultpath = os.path.join(cwd,'result')
 arr = os.listdir(filepath)
 print(arr)
-thresholdLimit = 2000
-filterLimit = 4
+thresholdLimit = 0.55
+filterLimit = 5
 tifArrays = []
 originalTif = gdal.Open(os.path.join(filepath, arr[0]), gdal.GA_ReadOnly)
 
@@ -142,14 +144,20 @@ for image in arr:
     tifArrays.append(tifArray)
 print("--- %s seconds for loading the images ---" % (time.time() - start_time))
 
+matched = hist_matching(tifArrays[0], tifArrays[1])
+tifArrays[0] = matched
+print("--- %s seconds for loading the images & histogram matching ---" % (time.time() - start_time))
+
 sub = subtract(tifArrays[0], tifArrays[1])
-print("--- %s seconds for loading and subtracting ---" % (time.time() - start_time))
+print("--- %s seconds for loading the images & histogram matching & subtracting ---" % (time.time() - start_time))
 
 subTresh = treshold(sub, thresholdLimit)
-print("--- %s seconds for loading, subtracting and tresholding ---" % (time.time() - start_time))
+print("--- %s seconds for loading the images & histogram matching & subtracting & tresholding ---" % (time.time() - start_time))
 
 subFiltered = filter(subTresh, filterLimit)
-print("--- %s seconds for loading, subtracting, tresholding and filtering---" % (time.time() - start_time))
+print("--- %s seconds for loading the images & histogram matching & subtracting & tresholding & filtering ---" % (time.time() - start_time))
+
+print(np.amax(subFiltered))
 
 newTif = createTif(subFiltered, originalTif, thresholdLimit, resultpath)
 print("--- %s seconds for everything ---" % (time.time() - start_time))
