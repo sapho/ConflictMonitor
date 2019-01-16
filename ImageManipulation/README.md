@@ -9,9 +9,11 @@
 │   ├── result (**Generated on script.py execution, if not already existing)
 │   │   ├── *result.tif (**Generated on script.py execution)
 │   ├── script.py
+│   ├── utils.py
 ```
 
 ### Usage
+Make sure that script.py & utils.py are in the same directory!
 ```bash
 $ cd ImageManipulation
 $ python3 script.py

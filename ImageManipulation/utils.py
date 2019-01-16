@@ -23,8 +23,7 @@ def hist_match(source, template):
     source = source.ravel()
     template = template.ravel()
 
-    # get the set of unique pixel values and their corresponding indices and
-    # counts
+    # get the set of unique pixel values and their corresponding indices and counts
     s_values, bin_idx, s_counts = np.unique(source, return_inverse=True,
                                             return_counts=True)
     t_values, t_counts = np.unique(template, return_counts=True)
