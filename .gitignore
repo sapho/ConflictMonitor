@@ -3,3 +3,4 @@ data/*
 pre_processing/*.SAFE
 server\node_modules\
 .idea\
+server/*
