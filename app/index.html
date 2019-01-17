@@ -1,40 +1,120 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <title>Conflict Monitor</title>
+    <title>STML</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <!-- JQuery & JQuery UI .js -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <!-- create Table from JSON -->
+
+    <!-- Front Awesome & Leaftlet & Leaflet Draw -->
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.13/leaflet.draw.css"/>
+
+    <!-- sidebar CSS -->
+    <link rel="stylesheet" href="../resources/sidebar/leaflet-sidebar.css"/>
+
+    <!-- DataTable JQuery -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.datatables.net/responsive/2.2.1/css/responsive.dataTables.min.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.datatables.net/select/1.2.4/css/select.dataTables.min.css"/>
+
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdn.datatables.net/responsive/2.2.1/js/dataTables.responsive.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/select/1.2.4/js/dataTables.select.min.js"></script>
+
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        html, body, #map {
+            height: 100%;
+            font: 10pt "Helvetica Neue", Arial, Helvetica, sans-serif;
+        }
+
+        .lorem {
+            font-style: italic;
+            color: #AAA;
+        }
+    </style>
 </head>
 <body>
-<form id="aoi">
-    Area of interest:<br>
-    xMin <input type="number" name="xMin"><br>
-    xMax <input type="number" name="xMax"><br>
-    yMin <input type="number" name="yMin"><br>
-    yMax <input type="number" name="yMax"><br>
-    <br>
-    Time range:<br>
-    Start: <input type="date" name="startdate"><br>
-    End: <input type="date" name="enddate"><br><br>
-    Platform
-    <select name="sentinel">
-        <option value="Sentinel-1">Sentinel-1</option>
-        <option value="Sentinel-2">Sentinel-2</option>
-        <option value="Sentinel-3">Sentinel-3</option>
-    </select><br>
-    Preprocessing level
-    <select name="level">
-        <option value="Level-1C">Level-1C</option>
-        <option value="Level-2A">Level-2A</option>
-    </select><br><br>
-    <button type="submit">Submit</button>
-</form>
-<form>
-    Cloudcoverage <input type="number" min="0" max="100" name="cloudcoverage"><br><br>
-    Login Copernicus Hub: <br>
-    Username: <input type="text" name="username"><br>
-    Password: <input type="password" name="password"><br><br>
-    Output datadir <input type="text" name="outdatadir"><br>
+<div id="sidebar" class="sidebar collapsed">
+    <!-- Nav tabs -->
+    <div class="sidebar-tabs">
+        <ul role="tablist">
+            <li><a href="#home" role="tab"><i class="fa fa-search"></i></a></li>
+            <li><a href="#git" role="tab"><i class="fa fa-github"></i></a></li>
+        </ul>
+
+        <ul role="tablist">
+        </ul>
+    </div>
+
+    <!-- Tab panes -->
+    <div class="sidebar-content">
+        <div class="sidebar-pane" id="home">
+            <h1 class="sidebar-header">
+                JamaSato
+                <span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
+            </h1>
+            <h2> Search </h2>
+
+            <div>
+                <div id="searchBox">
+                    <form id="searchform"> <!-- Die Get Funktion wird in der ready funktion deklariert-->
+                        <div class="dropdown">
+                            <button class="dropbtn">Choose a layer
+                                <i class="fa fa-caret-down"></i>
+                            </button>
+                            <div class="dropdown-content">
+                                <a href="#">Dataset 1</a>
+                                <a href="#">Dataset 2</a>
+                                <a href="#">Dataset 3</a>
+                            </div>
+                        </div>
+                        <br>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+        <div class="sidebar-pane" id="git">
+            <h1 class="sidebar-header">GitHub repository<span class="sidebar-close"><i
+                    class="fa fa-caret-left"></i></span></h1>
+            <h3>For feedback or further develoment see our GitHub repository
+                <a href="https://github.com/SarahLechler/JamaSato"> here.</a>
+            </h3>
+        </div>
 
 
-</form>
+    </div>
+</div>
+<div id="map" class="sidebar-map"></div>
+
+<script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.13/leaflet.draw.js"></script>
+<script src="https://unpkg.com/georaster"></script>
+<script src="https://unpkg.com/georaster-layer-for-leaflet/georaster-layer-for-leaflet.browserify.min.js"></script>
+<script src="../resources/sidebar/leaflet-sidebar.js"></script>
+<script src="../js/createtable.js"></script>
+<script src="https://www.promisejs.org/polyfills/promise-7.0.4.min.js"></script>
+<script src="../js/preview.js"></script>
+<script src="../js/createtable.js"></script>
+<script src="../js/leafletembed.js"></script>
+<script src="../js/dataManipulationLeaflet.js"></script>
+<script src="../js/setDate.js"></script>
+<script src="../js/index.js"></script>
+
+
 </body>
 </html>
