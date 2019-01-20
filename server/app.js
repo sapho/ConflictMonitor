@@ -22,36 +22,6 @@ app.use(function (req, res, next) {
     next();
 });
 
-
-
-
-/**
- * @desc AJAX.GET on server for sending a search request
- *       takes an array with search parameters
- *       and passes them to the search function
- *       url format: /aoi
- * @return metadata or error
- */
-app.get('/aoi', function (req, res) {
-    console.log("search string received");
-    let xMin = req.query.xMin;
-    let xMax = req.query.xMax;
-    let yMin = req.query.yMin;
-    let yMax = req.query.yMax;
-    let startdate = req.query.startdate;
-    let enddate = req.query.enddate;
-    let sentinel = req.query.sentinel;
-    let level = req.query.level;
-    let searchparams = [xMin, xMax, yMin, yMax, startdate, enddate, sentinel, level];
-    console.log(searchparams);
-    /*let erg = search(searchparams); //adjust path to search function
-    console.log(erg[0].footprint);
-    if(erg !== []){
-        res.json(erg);
-    } else res.send("nothing found")*/
-
-});
-
 app.use(function (req, res, next) {
     let err = new Error('Not Found');
     err.status = 404;

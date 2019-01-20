@@ -5,6 +5,7 @@
 let app = require('./app');
 let debug = require('debug')('stml:server');
 let http = require('http');
+let callScripts = require ('./callscripts');
 
 /**
  * Get port from environment and store in Express.
@@ -84,4 +85,9 @@ function onListening() {
         ? 'pipe ' + addr
         : 'port ' + addr.port;
     debug('Listening on ' + bind);
+
+    console.log('Server listening on Port ' + addr.port);
+
+    //call Scripts when everything is in its place
+    //callScripts.callScripts();
 }
