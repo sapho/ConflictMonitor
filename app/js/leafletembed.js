@@ -4,13 +4,13 @@ map.setView([51.2, 7], 9);
 
 
 var whiteAndBlack =     //adding black and white background map
-    L.tileLayer('//{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png', {
-        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-        subdomains: 'abcd',
-        maxZoom: 20,
-        minZoom: 0,
-        label: 'White and Black'  // optional label used for tooltip
-    }),
+        L.tileLayer('//{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png', {
+            attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+            subdomains: 'abcd',
+            maxZoom: 20,
+            minZoom: 0,
+            label: 'White and Black'  // optional label used for tooltip
+        }),
     osm =           //adding osm background map
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             label: 'Street Map',
@@ -42,44 +42,30 @@ sidebar.open('home');
 
 // FeatureGroup is to store editable layers
 
-var drawnItems = new L.FeatureGroup();
-map.addLayer(drawnItems);
+let loadLayer = (layer, method) => {
+    let pathBefore = layer; //+ pathname before
 
-// Rectangle draw options
-var drawControl = new L.Control.Draw({
-    draw: {
-        polyline: false,
-        polygon: false,
-        marker: false,
-        circle: false,
-        circlemarker: false,
-    },
-    edit: {
-        featureGroup: drawnItems
+    L.tileLayer(pathBefore + '/{z}/{x}/{y}.png',
+        {
+            attribution: 'Layer before change',
+            tms: true
+        }).addTo(map);
+
+    if (method === nbr) {
+        //add nbr Layer here
+    } else if (method === change) {
+        //add change layer here
+    } else {
+        alert("No Change Detection Layer will be displayed")
     }
-});
-
-//add event handlers for drawing on Map and save coordinates into an array
-
-var recCoord;
-map.on(L.Draw.Event.CREATED, function (e) {
-
-    drawnItems.clearLayers();
-
-    var type = e.layerType;
-    var layer = e.layer
-    console.log(layer);
-
-    drawnItems.addLayer(layer);
-    if (type === 'rectangle') {
-        recCoord = JSON.stringify(layer._latlngs[0]);
-        recCoord = recCoord.replace(/{"lat":/g, '');
-        recCoord = recCoord.replace(/"lng":/g, '');
-        recCoord = recCoord.replace(/}/g, '');
-        console.log(recCoord);
-    }
-});
 
 
-map.addControl(drawControl);
+    let pathAfter = layer; //+ pathname after
+
+    L.tileLayer(pathAfter + '/{z}/{x}/{y}.png',
+        {
+            attribution: 'Layer after change',
+            tms: true
+        }).addTo(map);
+};
 
