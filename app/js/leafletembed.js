@@ -45,7 +45,7 @@ sidebar.open('home');
 let loadLayer = (layer, method) => {
     let pathBefore = layer; //+ pathname before
 
-    L.tileLayer(pathBefore + '/{z}/{x}/{y}.png',
+    let layerBefore = L.tileLayer(pathBefore + '/{z}/{x}/{y}.png',
         {
             attribution: 'Layer before change',
             tms: true
@@ -62,10 +62,12 @@ let loadLayer = (layer, method) => {
 
     let pathAfter = layer; //+ pathname after
 
-    L.tileLayer(pathAfter + '/{z}/{x}/{y}.png',
+    let layerAfter = L.tileLayer(pathAfter + '/{z}/{x}/{y}.png',
         {
             attribution: 'Layer after change',
             tms: true
         }).addTo(map);
+
+    L.control.sideBySide(layerBefore, layerAfter).addTo(map);
 };
 
