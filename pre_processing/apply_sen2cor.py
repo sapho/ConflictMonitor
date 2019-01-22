@@ -8,7 +8,7 @@ import osgeo.gdal as gdal
 import os
 
 
-def run_correction_10(imgfolder):
+def run_correction(imgfolder, resolution):
     # list level 1C files in folder
     L1Cfiles = [s for s in os.listdir(imgfolder) if "L1C" in s]
     print(str(len(L1Cfiles)) +
@@ -17,39 +17,7 @@ def run_correction_10(imgfolder):
     # run sen2cor on level 1C files
     for file in L1Cfiles:
         command = 'L2A_Process ' + \
-            os.path.join(imgfolder, file) + ' --resolution=10'
-        system(command)
-        #print('Atmospheric correction finished for ' + file)
-
-    print('Done.')
-
-
-def run_correction_20(imgfolder):
-    # list level 1C files in folder
-    L1Cfiles = [s for s in os.listdir(imgfolder) if "L1C" in s]
-    print(str(len(L1Cfiles)) +
-          ' level 1C file(s) found. Performing atmospheric correction.')
-
-    # run sen2cor on level 1C files
-    for file in L1Cfiles:
-        command = 'L2A_Process ' + \
-            os.path.join(imgfolder, file) + ' --resolution=20'
-        system(command)
-        #print('Atmospheric correction finished for ' + file)
-
-    print('Done.')
-
-    
-def run_correction_60(imgfolder):
-    # list level 1C files in folder
-    L1Cfiles = [s for s in os.listdir(imgfolder) if "L1C" in s]
-    print(str(len(L1Cfiles)) +
-          ' level 1C file(s) found. Performing atmospheric correction.')
-
-    # run sen2cor on level 1C files
-    for file in L1Cfiles:
-        command = 'L2A_Process ' + \
-            os.path.join(imgfolder, file) + ' --resolution=60'
+            os.path.join(imgfolder, file) + resolution
         system(command)
         #print('Atmospheric correction finished for ' + file)
 
@@ -81,16 +49,14 @@ def create_composites(imgfolder, Level='2A'):
             os.path.join(imgfolder, folder, 'GRANULE'))[0]
         if Level == '2A':
             bands_path = os.path.join(
-                imgfolder, folder, 'GRANULE', granule_folder, 'IMG_DATA', 'R10M')
+                imgfolder, folder, 'GRANULE', granule_folder, 'IMG_DATA', 'R10m')
         else:
             bands_path = os.path.join(
                 imgfolder, folder, 'GRANULE', granule_folder, 'IMG_DATA')
         # create list of paths to the CIR bands, search by name to be independent from number of files in folder
         CIR_bandpaths = [os.path.join(bands_path, [s for s in os.listdir(bands_path) if "B02" in s][0]),
-                         os.path.join(bands_path, [s for s in os.listdir(
-                             bands_path) if "B03" in s][0]),
-                         os.path.join(bands_path, [s for s in os.listdir(
-                             bands_path) if "B04" in s][0]),
+                         os.path.join(bands_path, [s for s in os.listdir(bands_path) if "B03" in s][0]),
+                         os.path.join(bands_path, [s for s in os.listdir(bands_path) if "B04" in s][0]),
                          os.path.join(bands_path, [s for s in os.listdir(bands_path) if "B08" in s][0])]
 
         # create virtual layer
@@ -117,8 +83,9 @@ def create_composites(imgfolder, Level='2A'):
 
 if __name__ == "__main__":
     imgfolder = os.environ['imgfolder']
-    level = '2A'
-    run_correction_10(imgfolder)
-    # run_correction_20(imgfolder)
-    # run_correction_60(imgfolder)
-    create_composites(imgfolder, level)
+ 
+    run_correction(imgfolder, ' --resolution=10')
+    run_correction(imgfolder, ' --resolution=20')
+    run_correction(imgfolder, ' --resolution=60')
+    
+    create_composites(imgfolder)
