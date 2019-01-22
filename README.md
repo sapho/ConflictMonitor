@@ -5,7 +5,7 @@ Monitoring Conflict Areas with Satellite Image Time Series
 This container aims to automate the pre-processing of Sentinel-2 data from L1C to L2A.
  It uses sen2cor, see http://step.esa.int/main/third-party-plugins-2/sen2cor/.
  
-## Usage:
+## Usage: (Provided by Daniel Nüst)
 To use this container run the script apply_sen2cor.bat.
 
  ```bash
