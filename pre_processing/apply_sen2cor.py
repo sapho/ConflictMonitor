@@ -4,10 +4,13 @@
 
 from sys import argv
 from os import system
-import osgeo.gdal as gdal
+from osgeo import gdal
 import os
 
-
+# This script simply executes the sen2cor processor on all unzipped L1C Sentinel-2 files in a folder.
+# Takes one input argument, the directory where the unzipped L1C files are
+# sen2cor needs to be installed (standalone installer) and the directory containing
+# "L2A_Process.bat" needs to be added to path system environment variable
 def run_correction(imgfolder, resolution):
     # list level 1C files in folder
     L1Cfiles = [s for s in os.listdir(imgfolder) if "L1C" in s]
@@ -23,7 +26,11 @@ def run_correction(imgfolder, resolution):
 
     print('Done.')
 
-
+# This script searches for the atmospherically corrected (L2A) Sentinel-2  files in a folder and creates
+# 4-Band CIR composites from the 10m resolution files.
+# NOTE: If Level is set to '2A' (default), this script assumes the directory structure created by sen2cor
+# (which creates an additional subfolder "R10m") -> see variable bands_path. Otherwise it assumes
+# the standard directory structure of Sentinel-2 data.
 def create_composites(imgfolder, Level='2A'):
 
     # create folder for composites
@@ -83,7 +90,7 @@ def create_composites(imgfolder, Level='2A'):
 
 if __name__ == "__main__":
     imgfolder = os.environ['imgfolder']
- 
+
     run_correction(imgfolder, ' --resolution=10')
     run_correction(imgfolder, ' --resolution=20')
     run_correction(imgfolder, ' --resolution=60')

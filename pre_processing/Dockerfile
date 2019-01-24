@@ -11,8 +11,9 @@ MAINTAINER Sebastian Holtkamp <Sebastian.Holtkamp@wwu.de>
 RUN apt-get update \
     && apt-get install -qqy --no-install-recommends \
 		python2.7 \
-        python-gdal \
+        libgdal-dev \
         python-pip \
+        python-gdal \
         wget \
         file \
     && apt-get clean \
