@@ -5,7 +5,9 @@
 from sys import argv
 from os import system
 from osgeo import gdal
+import sys
 import os
+import time 
 
 # This script simply executes the sen2cor processor on all unzipped L1C Sentinel-2 files in a folder.
 # Takes one input argument, the directory where the unzipped L1C files are
@@ -89,10 +91,10 @@ def create_composites(imgfolder, Level='2A'):
 
 
 if __name__ == "__main__":
-    imgfolder = os.environ['imgfolder']
+   # imgfolder = os.environ['imgfolder']
 
-    run_correction(imgfolder, ' --resolution=10')
-    run_correction(imgfolder, ' --resolution=20')
-    run_correction(imgfolder, ' --resolution=60')
+   # run_correction(imgfolder, ' --resolution=10')
+    #run_correction(imgfolder, ' --resolution=20')
+    #run_correction(imgfolder, ' --resolution=60')
     
-    create_composites(imgfolder)
+    #create_composites(imgfolder)

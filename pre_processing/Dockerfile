@@ -7,15 +7,19 @@
 FROM ubuntu:18.04
 MAINTAINER Sebastian Holtkamp <Sebastian.Holtkamp@wwu.de>
 
-# Install dependencies 
 RUN apt-get update \
-    && apt-get install -qqy --no-install-recommends \
-		python2.7 \
-        libgdal-dev \
+    && apt-get install -y software-properties-common
+
+# Install dependencies 
+RUN apt update \
+    && apt upgrade -qqy --no-install-recommends \
+    && apt install -qqy --no-install-recommends \
+	software-properties-common \
+        python2.7 \
         python-pip \
+        gdal-bin \
         python-gdal \
         wget \
-        file \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,5 +42,6 @@ WORKDIR /workspace
 COPY . /workspace
 
 # Run sen2_composites.py when the container launches
-ENTRYPOINT ["python"]
-CMD ["apply_sen2cor.py"] 
+#ENTRYPOINT ["python"]
+#CMD ["apply_sen2cor.py"] 
+CMD gdalinfo --version && gdalinfo --formats && ogrinfo --formats
