@@ -50,7 +50,7 @@ function normalizePort(val) {
 /**
  * Event listener for HTTP server "error" event.
  */
-
+sudo docker run -p 8080:8080 niklas/node-web-app
 function onError(error) {
     if (error.syscall !== 'listen') {
         throw error;
