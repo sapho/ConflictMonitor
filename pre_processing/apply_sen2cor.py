@@ -92,7 +92,9 @@ if __name__ == "__main__":
     imgfolder = os.environ['imgfolder']
 
     run_correction(imgfolder, ' --resolution=10')
+    # AOT, b2, b3, b4, b8, TCI, WVP
     run_correction(imgfolder, ' --resolution=20')
     run_correction(imgfolder, ' --resolution=60')
+    # AOT, b1-7, b8a, b9-12
     
     create_composites(imgfolder)

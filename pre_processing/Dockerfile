@@ -9,15 +9,21 @@ MAINTAINER Sebastian Holtkamp <Sebastian.Holtkamp@wwu.de>
 
 # Install dependencies 
 RUN apt-get update \
-    && apt-get install -qqy --no-install-recommends \
-		python2.7 \
-        libgdal-dev \
-        python-pip \
-        python-gdal \
-        wget \
-        file \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+   && apt-get install -qqy --no-install-recommends \
+ 	   software-properties-common \
+       wget \
+       file \
+   && add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
+
+# Install dependencies
+RUN apt-get update \
+   && apt-get install -qqy --no-install-recommends \
+       python2.7 \
+       python-pip \
+       gdal-bin \
+       python-gdal \
+       libopenjp2-7-dev \
+       libgdal-dev
 
 # Install numpy 
 RUN pip install numpy
@@ -38,5 +44,6 @@ WORKDIR /workspace
 COPY . /workspace
 
 # Run sen2_composites.py when the container launches
-ENTRYPOINT ["python"]
-CMD ["apply_sen2cor.py"] 
+#ENTRYPOINT ["python"]
+#CMD ["apply_sen2cor.py"] 
+CMD gdalinfo --version && gdalinfo --formats
