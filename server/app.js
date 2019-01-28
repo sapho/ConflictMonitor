@@ -3,16 +3,25 @@ let path = require('path');
 let logger = require('morgan');
 // let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
+let dockerCmdJs = require('docker-cmd-js');
+let cmd = new dockerCmdJs.Cmd();
+
+cmd.run('docker build -t Docker ../pre_processing');
+/*cmd.container.start('Dockerfile', {}, 'docker run -p 8080:8080').then(() => //?
+    console.log('Docker started'));*/
 
 
 let app = express();
 /* give access to following folders */
 app.use(express.static("../server"));
 app.use(express.static("../app"));
+app.use(express.static("../postprocessing/testData/output"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 //app.use(express.static(""));  //hier Pfad zu metadaten einfügen
 app.use(logger('combined'));
+
+
 
 /* http routing. */
 // log code which is executed on every request
