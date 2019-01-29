@@ -10,13 +10,11 @@ MAINTAINER Sebastian Holtkamp <Sebastian.Holtkamp@wwu.de>
 # Install dependencies 
 RUN apt-get update \
    && apt-get install -qqy --no-install-recommends \
- 	   software-properties-common \
-       wget \
-       file \
-   && add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
-
-# Install dependencies
-RUN apt-get update \
+      software-properties-common \
+      wget \
+      file \
+   && add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable \
+   && apt-get update \
    && apt-get install -qqy --no-install-recommends \
        python2.7 \
        python-pip \
@@ -28,22 +26,10 @@ RUN apt-get update \
 # Install numpy 
 RUN pip install numpy
 
-# Install Sen2Cor
-ENV SEN2COR_VERSION='Sen2Cor-02.05.05-Linux64'
-RUN mkdir /sen2cor
-WORKDIR /sen2cor
-
-RUN wget http://step.esa.int/thirdparties/sen2cor/2.5.5/$SEN2COR_VERSION.run -P . \
-    && bash /sen2cor/$SEN2COR_VERSION.run \
-    && rm -rf ${SEN2COR_VERSION}.run
-
-ENV PATH="/sen2cor/$SEN2COR_VERSION/bin:$PATH"
-
 # Make workspace and copy all files of current directory into it 
 WORKDIR /workspace
 COPY . /workspace
 
-# Run sen2_composites.py when the container launches
-#ENTRYPOINT ["python"]
-#CMD ["apply_sen2cor.py"] 
-CMD gdalinfo --version && gdalinfo --formats
+# Run composites.py when the container launches
+ENTRYPOINT ["python"]
+CMD ["composites.py"] 

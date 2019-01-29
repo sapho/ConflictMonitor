@@ -1,3 +1,2 @@
-data/*
-!data/.keep
-pre_processing/*.SAFE
+pre_processing/atmospheric_correction/*.SAFE
+pre_processing/composites/*.SAFE
