@@ -132,7 +132,7 @@ plot(classes2, col = rainbow(10))
 dev.off()
 
 #Call changeDetect
-source_python('~/monitoring/postprocessing/tiffChangeDetection.py')
+source_python('/conflicMonitoring/postprocessing/tiffChangeDetection.py')
 tiffChangeDetection(grep1[1],grep1[2],"bfast_ChangeDetection1")
 tiffChangeDetection(grep2[1],grep2[2],"bfast_ChangeDetection2")
 tiffChangeDetection(grep3[1],grep3[2],"bfast_ChangeDetection3")
