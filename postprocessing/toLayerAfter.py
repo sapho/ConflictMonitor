@@ -6,8 +6,8 @@ import subprocess
 from osgeo import gdal
 from osgeo import osr
 
-jp2InputDir = './testdata/input/'
-layerOutputDir = './testdata/output/'
+jp2InputDir = '/data/input/'
+layerOutputDir = '/data/output/after/'
 
 def getfiles():
     onlyfiles = [f for f in listdir(jp2InputDir) if isfile(join(jp2InputDir, f))]
