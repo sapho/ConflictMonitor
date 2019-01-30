@@ -4,8 +4,6 @@ ENV TERM=xterm\
     TZ=Europe/Berlin\
     DEBIAN_FRONTEND=noninteractive
 
-WORKDIR /usr/src/monitoringApp
-
 # Install python and repository for gdal
 RUN apt-get update && apt-get install -y python python3 python-pip python3-pip python-dev python3-dev python-setuptools python3-setuptools curl software-properties-common apt-transport-https ca-certificates
 RUN add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable && apt-get update
@@ -51,27 +49,20 @@ RUN pip install requests
 RUN pip install --upgrade setuptools
 RUN pip install sentinelsat
 
-COPY getSpatialData.R .
+RUN mkdir /conflictMonitoring
+WORKDIR /conflictMonitoring
 
-WORKDIR /usr/src/monitoringApp2
+RUN mkdir server
 
-RUN mkdir /server
-
-RUN mkdir /pre_pocessing
-ADD pre_processing/* ./pre_processing/
-
-RUN mkdir /data
-ADD data/* ./data/
-
-COPY server/package*.json /server
-WORKDIR /server
+COPY server/package*.json server
+WORKDIR server
 RUN npm install
 
 WORKDIR ../
 
 COPY . .
 
-WORKDIR /server
+WORKDIR server
 
 EXPOSE 8080
 
