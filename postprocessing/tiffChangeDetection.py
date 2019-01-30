@@ -11,7 +11,7 @@ import sys
 cwd = os.getcwd()
 cwdEnd = cwd[len(cwd)-7:]
 if cwdEnd != 'scripts':
-    sys.path.append('~/monitoring/postprocessing/scripts')
+    sys.path.append('conflicMonitoring/postprocessing/scripts')
     print(sys.path)
     import utils_hist
 else:
