@@ -31,7 +31,7 @@ time_range <-  c("2018-07-01", "2018-09-30")
 platform <- "Sentinel-2" #or "Sentinel-1" or "Sentinel-3"
 
 ## set login credentials and archive directory
-login_CopHub(username = "sapho") #asks for password or define 'password'
+login_CopHub(username = "conflictmonitor", password = "conflictmonitor2019") #asks for password or define 'password'
 set_archive("/data/raw")
 
 ## Use getSentinel_query to search for data (using the session AOI)
