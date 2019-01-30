@@ -30,14 +30,15 @@
 
                 <h2>File selection</h2>
                 <div>
-                    <select id="method" form="layerform">
-                        <option selected disabled>Choose a method</option>
-                        <option value="nbr">NBR</option>
-                        <option value="change">Change Detection</option>
-                    </select>
                     <select id="layer" form="layerform">
                         <option selected disabled>Choose a layer</option>
                         <option value="change">Portugal</option>
+                    </select>
+                    <select id="method" form="layerform">
+                        <option selected disabled>Choose a method</option>
+                        <option value="slider">Slider (Side-by-Side)</option>
+                        <option value="nbr">NBR</option>
+                        <option value="change">Change Detection</option>
                     </select>
                     <form id =layerform>
                         <input type="submit">
@@ -62,7 +63,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
     <script src="../resources/sidebar/leaflet-sidebar.js"></script>
     <script src="../resources/leaflet-side-by-side/leaflet-side-by-side.js"></script>
-    <script src="../js/leafletembed.js"></script>
+    <script src="../js/map.js"></script>
     <script src="../js/index.js"></script>
 
 
