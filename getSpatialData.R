@@ -11,28 +11,26 @@ library(raster)
 library(sf)
 library(sp)
 
-## Define an AOI (either matrix, sf or sp object)
-data("aoi_data") # example aoi
+## Define a polygon enclosing the Rakhine State of Myanmar as a SpatialPolygons feature
+x_coord <- c(92.37145,  91.93209,  92.40440, 93.22819, 94.42545, 94.94169, 94.96366, 94.57922, 93.95314, 92.37145)
+y_coord <- c(21.63687, 21.22769, 20.13790, 19.06123, 17.23382, 17.28629, 18.50981, 19.61082, 20.86872, 21.63687)
+xym <- cbind(x_coord, y_coord)
 
-aoi <- aoi_data[[3]] # AOI as matrix object, or better:
-aoi <- aoi_data[[2]] # AOI as sp object, or:
-aoi <- aoi_data[[1]] # AOI as sf object
-#instead, you could define an AOI yourself, e.g. as simple matrix
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+aoi = SpatialPolygons(list(ps))
 
-## set AOI for this session
+proj4string(aoi) = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
+# set the SpatialPolygons feature as AOI
 set_aoi(aoi)
-view_aoi() #view AOI in viewer, which will look like this:
-
-#instead of using an existing AOI, you can simply draw one:
-set_aoi() #call set_aoi() without argument, which opens a mapedit editor:
 
 ## After defining a session AOI, define time range and platform
-time_range <-  c("2018-07-01", "2018-09-30")
+time_range <-  c("2018-07-01", toString(Sys.Date()))
 platform <- "Sentinel-2" #or "Sentinel-1" or "Sentinel-3"
 
 ## set login credentials and archive directory
-login_CopHub(username = "sapho") #asks for password or define 'password'
-set_archive("/data/raw")
+login_CopHub(username = "conflictmonitor", password = "conflictmonitor2019")
 
 ## Use getSentinel_query to search for data (using the session AOI)
 records <- getSentinel_query(time_range = time_range, platform = platform)
@@ -44,32 +42,17 @@ unique(records$processinglevel) #use one of the, e.g. to see available processin
 records_filtered <- records[which(records$processinglevel == "Level-1C"),] #filter by Level
 records_filtered <- records_filtered[as.numeric(records_filtered$cloudcoverpercentage) <= 30, ] #filter by clouds
 
-## View records table
-View(records)
-View(records_filtered)
-#browser records or your filtered records
-
-## Preview a single record on a mapview map with session AOI
-getSentinel_preview(record = records_filtered[9,])
-
-## Preview a single record on a mapview map without session AOI
-getSentinel_preview(record = records_filtered[9,], show_aoi = FALSE)
-
-## Preview a single record as RGB plot
-getSentinel_preview(record = records_filtered[9,], on_map = FALSE)
-
 ## Download some datasets to your archive directory
-datasets <- getSentinel_data(records = records_filtered[c(4,7,9), ])
+dir.create("/data/")
+dir.create("/data/raw/")
+dir.create("/data/raw/zipped")
+set_archive("/data/raw/zipped")
+datasets <- getSentinel_data(records = records_filtered[c(1,5), ])
 
-## Finally, define an output format and make them ready-to-use
-datasets_prep <- prepSentinel(datasets, format = "tiff")
-# or use VRT to not store duplicates of different formats
-datasets_prep <- prepSentinel(datasets, format = "vrt")
-
-## View the files
-datasets_prep[[1]][[1]][1] #first dataset, first tile, 10 m resolution
-datasets_prep[[1]][[1]][2] #first dataset, first tile, 20 m resolution
-datasets_prep[[1]][[1]][3] #first dataset, first tile, 60 m resolution
-
-## Load them directly into R
-r <- stack(datasets_prep[[1]][[1]][1])
+## Extract datasets to your unzip directory
+dir.create("/data/raw/unzipped")
+for (i in 0:(length(datasets)-1)) {
+  i <- i+1
+  unzip (datasets[i], exdir = "/data/raw/unzipped")
+}
+remove(i)
