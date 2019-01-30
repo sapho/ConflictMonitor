@@ -11,10 +11,9 @@ MAINTAINER Sebastian Holtkamp <Sebastian.Holtkamp@wwu.de>
 RUN apt-get update \
     && apt-get install -qqy --no-install-recommends \
 		python2.7 \
-        python-gdal \
-        python-pip \
-        wget \
-        file \
+      python-pip \
+      wget \
+      file \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -30,12 +29,13 @@ RUN wget http://step.esa.int/thirdparties/sen2cor/2.5.5/$SEN2COR_VERSION.run -P 
     && bash /sen2cor/$SEN2COR_VERSION.run \
     && rm -rf ${SEN2COR_VERSION}.run
 
+# Set path to make Sen2Cor usable
 ENV PATH="/sen2cor/$SEN2COR_VERSION/bin:$PATH"
 
 # Make workspace and copy all files of current directory into it 
 WORKDIR /workspace
 COPY . /workspace
 
-# Run sen2_composites.py when the container launches
+# Run apply_sen2cor.py when the container launches
 ENTRYPOINT ["python"]
-CMD ["apply_sen2cor.py"] 
+CMD ["apply_sen2cor.py"]  
