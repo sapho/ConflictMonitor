@@ -6,6 +6,7 @@
     "start": "node ./server.js"
   },
   "dependencies": {
+    "async": "^2.6.1",
     "body-parser": "^1.18.2",
     "docker-cmd-js": "^4.1.0",
     "express": "~4.15.5",

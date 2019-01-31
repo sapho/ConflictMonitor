@@ -89,5 +89,5 @@ function onListening() {
     console.log('Server listening on Port ' + addr.port);
 
     //call Scripts when everything is in its place
-    callScripts.callScripts();
+    callScripts.request();
 }

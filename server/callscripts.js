@@ -1,23 +1,77 @@
-let {PythonShell} = require('python-shell');
+let { PythonShell } = require('python-shell');
 let R = require('r-script');
-const { exec } = require('child_process');
+let async = require('async');
 
-module.exports = {
-    callScripts: () => {
-        R("../getSpatialData.R");
-
-        exec('../pre_processing/composites/apply_sen2cor.bat');
-        PythonShell.run('../postprocessing/NBR_BOA_Images.py', null, function (err) {
-            if (err) {
-                throw err;
+exports.request = function (req, res) {
+    async.waterfall([
+        function (callback) {
+            R("../getSpatialData.R")
+            .call(function(err, d) {
+                if (err) {
+                    console.log(err);
+                    callback(new Error("getSpatialData.R failed"));
+                } else {
+                    console.log("Success getSpatialData.R")
+                    callback(null);
+                }
+            });   
+        },
+        function (callback) {
+            PythonShell.run('../postprocessing/NBR_BOA_Images.py', null, function (err) {
+                if (err) {
+                    console.log(err);
+                    callback(new Error("NBR_BOA_Images failed"));
+                } else {
+                    console.log("Success NBR_BOA_Images.py");
+                    callback(null);
+                }
+            });
+        },
+        function (callback) {
+            PythonShell.run('../postprocessing/subset.py', null, function (err) {
+                if (err) {
+                    console.log(err);
+                    callback(new Error("subset.py failed"));
+                } else {
+                    console.log("Success subset.py");
+                    callback(null);
+                }
+            });
+        },
+        function (callback) {
+            R("../bfast.R")
+            .call(function(err, d) {
+                if (err) {
+                    console.log(err);
+                    callback(new Error("getSpatialData.R failed"));
+                } else {
+                    console.log("Success getSpatialData.R")
+                    callback(null);
+                }
+            });
+        } /*,
+        function (callback) { // Dummy
+            PythonShell.run('../dummy/dummy', null, function (err) {
+                if (err) {
+                    console.log(err);
+                    callback(new Error("dummy failed"));
+                } else {
+                    console.log("Success dummy");
+                    callback(null);
+                }
+            });
+        }
+*/
+    ], function (err, code, result) {
+        if (err) {
+            if (!err.message) {
+                err.message = JSON.stringify(err);
             }
-        });
-        PythonShell.run('../postprocessing/subset.py', null, function (err) {
-            if (err) {
-                throw err;
-            }
-        });
-        //add other scripts here
-        R("../bfast.R");
+            console.error(colors.red(err.message));
+            res.status(code).send(err.message);
+        } else {
+            res.status(code).send(result);
+        }
     }
+    );
 };
