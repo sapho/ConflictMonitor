@@ -19,12 +19,19 @@ exports.request = function (req, res) {
             });   
         },
         function (callback) {
-            cmd.debug().run('docker run basti1')
+            cmd.debug().run('docker run basti_ac')
                 .then(function(){
                     callback(null)
                 })
                 .catch((err) => { callback(new Error("preprocessing failed with message: " + err)) });
         },
+            function (callback) {
+                cmd.debug().run('docker run basti_c')
+                    .then(function(){
+                        callback(null)
+                    })
+                    .catch((err) => { callback(new Error("preprocessing failed with message: " + err)) });
+            },
         function (callback) {
             PythonShell.run('../postprocessing/NBR_BOA_Images.py', null, function (err) {
                 if (err) {
