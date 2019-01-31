@@ -6,12 +6,6 @@ let bodyParser = require('body-parser');
 let dockerCmdJs = require('docker-cmd-js');
 let cmd = new dockerCmdJs.Cmd();
 
-/*cmd.container.start('Dockerfile', {}, 'docker run -p 8080:8080').then(() => //?
-    console.log('Docker started'));*/
-
-let {exec} = require('child_process');
-exec('cd ../pre_processing/atmospheric_correction && docker build --no-cache -t apply .');
-
 let app = express();
 /* give access to following folders */
 app.use(express.static("../server"));

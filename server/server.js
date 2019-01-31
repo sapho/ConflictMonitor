@@ -6,6 +6,8 @@ let app = require('./app');
 let debug = require('debug')('stml:server');
 let http = require('http');
 let callScripts = require ('./callscripts');
+let dockerCmdJs = require('docker-cmd-js');
+let cmd = new dockerCmdJs.Cmd();
 
 /**
  * Get port from environment and store in Express.
@@ -13,19 +15,27 @@ let callScripts = require ('./callscripts');
 
 let port = normalizePort(process.env.PORT || '8080');
 app.set('port', port, 'Content-Type', 'application/json');
+
 /**
  * Create HTTP server.
  */
-
 let server = http.createServer(app);
 
-/**
- * Listen on provided port, on all network interfaces.
- */
+cmd.debug().run('docker build --no-cache -t basti1 -f ../pre_processing/atmospheric_correction/Dockerfile .')
+    .then(function(){
+        startServer();
+    });
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+
+function startServer(){
+    /**
+     * Listen on provided port, on all network interfaces.
+     */
+
+    server.listen(port);
+    server.on('error', onError);
+    server.on('listening', onListening);
+}
 
 /**
  * Normalize a port into a number, string, or false.
@@ -89,5 +99,5 @@ function onListening() {
     console.log('Server listening on Port ' + addr.port);
 
     //call Scripts when everything is in its place
-    callScripts.request();
+    // callScripts.request();
 }

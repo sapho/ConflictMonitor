@@ -1,6 +1,8 @@
 let { PythonShell } = require('python-shell');
 let R = require('r-script');
 let async = require('async');
+let dockerCmdJs = require('docker-cmd-js');
+let cmd = new dockerCmdJs.Cmd();
 
 exports.request = function (req, res) {
     async.waterfall([
@@ -15,6 +17,13 @@ exports.request = function (req, res) {
                     callback(null);
                 }
             });   
+        },
+        function (callback) {
+            cmd.debug().run('docker run basti1')
+                .then(function(){
+                    callback(null)
+                })
+                .catch((err) => { callback(new Error("preprocessing failed with message: " + err)) });
         },
         function (callback) {
             PythonShell.run('../postprocessing/NBR_BOA_Images.py', null, function (err) {
