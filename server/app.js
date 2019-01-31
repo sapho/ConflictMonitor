@@ -15,7 +15,7 @@ let app = express();
 /* give access to following folders */
 app.use(express.static("../server"));
 app.use(express.static("../app"));
-app.use(express.static("../postprocessing/testData/output"));
+app.use(express.static("../data/output"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 //app.use(express.static(""));  //hier Pfad zu metadaten einfügen

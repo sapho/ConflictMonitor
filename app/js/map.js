@@ -46,9 +46,26 @@ let loadLayer = (layer, method) => {
     };
 
     if (method === 'nbr') {
+        let nbrPath = "nbr/Layer";
+        let nbrLayer = L.tileLayer(nbrPath + '/{z}/{x}/{y}.png',
+            {
+                tms: true, opacity: 0.85,
+                attribution: 'changeLayer'
+            }).addTo(map);
+        overlaymaps = {
+            "NBRLayer": nbrLayer
+        };
         //add nbr Layer here
     } else if (method === 'change') {
-        //add change layer here
+        let changePath = "change/Layer";
+        let changeLayer = L.tileLayer(changePath + '/{z}/{x}/{y}.png',
+            {
+                tms: true, opacity: 0.85,
+                attribution: 'changeLayer'
+            }).addTo(map);
+        overlaymaps = {
+            "changeLayer": changeLayer
+        };
     } else if(method=== 'slider') {
         let pathAfter = layer; //+ pathname after
         let layerAfter = L.tileLayer(pathAfter + '/{z}/{x}/{y}.png',
