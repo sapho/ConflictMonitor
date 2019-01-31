@@ -38,8 +38,12 @@ records_filtered <- records_filtered[as.numeric(records_filtered$cloudcoverperce
 ## Download queried datasets to archive directory
 dir.create("/data/raw/zipped", recursive = TRUE)
 set_archive("/data/raw/zipped")
+
+######################### IMPORTANT ################################
+# The following lines serve for test purposese since it takes days to download the full extent
+# If you want to use the full extent use line 46 instead of 45
 datasets <- getSentinel_data(records = records_filtered[c(4,7,9), ])
-##datasets <- getSentinel_data(records = records_filtered)
+# datasets <- getSentinel_data(records = records_filtered)
 
 ## Extract downloaded datasets to unzip directory
 dir.create("/data/raw/unzipped")
