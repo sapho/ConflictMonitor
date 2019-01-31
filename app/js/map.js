@@ -1,6 +1,8 @@
 let map = L.map('map', {
-    center: [21.2022347759, 92.3855338861],
-    zoom: 12
+    center: [38.93793, -9.32756],
+    zoom: 12,
+    minZoom: 8,
+    maxZoom: 13,
 });
 
 
@@ -32,11 +34,28 @@ let sidebar = L.control.sidebar('sidebar').addTo(map);
 sidebar.open('home');
 
 // FeatureGroup is to store editable layers
+let layerBefore;
+let changeLayer;
+let nbrLayer;
+let layerAfter;
 let loadLayer = (method) => {
     debugger;
-    let pathBefore = 'T46QDJ_20171215T042151_TCI_20m'; //+ pathname before
 
-    let layerBefore = L.tileLayer(pathBefore + '/{z}/{x}/{y}.png',
+    if(map.hasLayer(layerBefore)){
+        map.removeLayer(layerBefore)
+    }
+    if(map.hasLayer(layerAfter)){
+        map.removeLayer(layerAfter)
+    }
+    if(map.hasLayer(nbrLayer)){
+        map.removeLayer(nbrLayer)
+    }
+    if(map.hasLayer(changeLayer)){
+        map.removeLayer(changeLayer)
+    }
+    let pathBefore = '/before/T29SMD_20180826T113309_TCI.tif'; //+ pathname before
+
+    layerBefore = L.tileLayer(pathBefore + '/{z}/{x}/{y}.png',
         {
             tms: true, opacity: 0.85,
             attribution: 'Layer before change'
@@ -46,8 +65,8 @@ let loadLayer = (method) => {
     };
 
     if (method === 'nbr') {
-        let nbrPath = "nbr/Layer";
-        let nbrLayer = L.tileLayer(nbrPath + '/{z}/{x}/{y}.png',
+        let nbrPath = "/nbr/T29SMD_20180826T113309_T29SMD_20180925T113309_result_NBR";
+        nbrLayer = L.tileLayer(nbrPath + '/{z}/{x}/{y}.png',
             {
                 tms: true, opacity: 0.85,
                 attribution: 'changeLayer'
@@ -57,8 +76,8 @@ let loadLayer = (method) => {
         };
         //add nbr Layer here
     } else if (method === 'change') {
-        let changePath = "change/Layer";
-        let changeLayer = L.tileLayer(changePath + '/{z}/{x}/{y}.png',
+        let changePath = "/change/B08_RESULT_T_6clusters (1)";
+        changeLayer = L.tileLayer(changePath + '/{z}/{x}/{y}.png',
             {
                 tms: true, opacity: 0.85,
                 attribution: 'changeLayer'
@@ -67,8 +86,9 @@ let loadLayer = (method) => {
             "changeLayer": changeLayer
         };
     } else if(method=== 'slider') {
-        let pathAfter = layer; //+ pathname after
-        let layerAfter = L.tileLayer(pathAfter + '/{z}/{x}/{y}.png',
+
+        let pathAfter = '/after/T29SMD_20180925T113309_TCI.tif'; //+ pathname after
+        layerAfter = L.tileLayer(pathAfter + '/{z}/{x}/{y}.png',
             {
                 attribution: 'Layer after change',
                 tms: true
