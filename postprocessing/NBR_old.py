@@ -29,21 +29,17 @@ def jp2ToTiff(filepath,image):
     resolutions = os.listdir(path)
     for resolution in resolutions:
         bandPath = os.path.join(filepath,image,"IMG_DATA",resolution)
-        bands = os.listdir(bandPath)
-        for band in bands:
-            images = os.path.join(filepath,image,"IMG_DATA",resolution,band)
-            in_image = gdal.Open(images)
-            driver = gdal.GetDriverByName("GTiff")
-            out_image = driver.CreateCopy(images[0:len(images)-4] + ".tif",in_image,0)
+        in_image = gdal.Open(bandPath)
+        driver = gdal.GetDriverByName("GTiff")
+        out_image = driver.CreateCopy(bandPath[0:len(bandPath)-4] + ".tif",in_image,0)
     
-   
 
-def resample(filepath,image,resolution,name_datum,band,outRes,x,y,resAlg,outputT):
+def resample(filepath,image,name_datum,band,x,y,resAlg,outputT):
     print("in resample")
-    resampleBandPath = os.path.join(filepath,image,"IMG_DATA",resolution,name_datum + band + ".tif")
+    resampleBandPath = os.path.join(filepath,image,"IMG_DATA",name_datum + band + ".tif")
     resampleBand = gdal.Open(resampleBandPath)
     getBand = resampleBand.GetRasterBand(1)
-    outFile = os.path.join(filepath, image,"IMG_DATA",outRes,name_datum + "resample" + band + ".tif")
+    outFile = os.path.join(filepath, image,"IMG_DATA",name_datum + "resample" + band + ".tif")
     if(not(os.path.isfile(outFile))):
         result = gdal.Translate(outFile,resampleBandPath,format="GTiff",width=x,height=y,resampleAlg=resAlg,outputType=outputT)
         print("resampled an image")
@@ -94,9 +90,9 @@ def readPath(image):
     nameDatum = name + datum
     return nameDatum
        
-def readBand(filepath,image,resolution,nameDatum,band):
+def readBand(filepath,image,nameDatum,band):
     print("in readBand")
-    band = os.path.join(filepath,image,'IMG_DATA',resolution, nameDatum + band + '.tif')
+    band = os.path.join(filepath,image,'IMG_DATA', nameDatum + band + '.tif')
     if((os.path.isfile(band))):
         open_band = gdal.Open(band)
         img = open_band.ReadAsArray()
@@ -105,15 +101,15 @@ def readBand(filepath,image,resolution,nameDatum,band):
     else:
         print("file"+ band + " not exists")
 
-def callNBR(nir,swir,filepath,image,resolution,nameDatum,band):
+def callNBR(nir,swir,filepath,image,nameDatum,band):
     print("in callNBR")
-    inPath = os.path.join(filepath,image,'IMG_DATA',resolution, nameDatum + band + '.tif')
+    inPath = os.path.join(filepath,image,'IMG_DATA', nameDatum + band + '.tif')
     open_band = gdal.Open(inPath)
     result = computeNBR(nir,swir)
     xsize,ysize,GeoT,Projection,DataType = GetGeoInfo(inPath)
     format_out = "GTiff"
     driver = gdal.GetDriverByName(format_out)
-    outPath = os.path.join(filepath,'nbr',image, 'IMG_DATA', resolution, nameDatum + 'NBR.tif')
+    outPath = os.path.join(filepath,'nbr',image, 'IMG_DATA', nameDatum + 'NBR.tif')
     print("OutPath: " + outPath)
     print(not(os.path.isfile(outPath)))
     if(not(os.path.isfile(outPath))):
@@ -141,12 +137,12 @@ def datumCharsNBR(x):
 def datumCharsArr(x):
     return(x[11:19])
 
-def nbrOldNew(nbrDict,filepath,filepath2,resolution):
+def nbrOldNew(nbrDict,filepath,filepath2):
     print("in nbrOldNew")
     for key in nbrDict:
         if(key != len(nbrDict)):
-            oldNBRPath = os.path.join(filepath,nbrDict[key][1],'IMG_DATA',resolution,nbrDict[key][0])
-            newNBRPath = os.path.join(filepath,nbrDict[key+1][1],'IMG_DATA',resolution,nbrDict[key+1][0])
+            oldNBRPath = os.path.join(filepath,nbrDict[key][1],'IMG_DATA',nbrDict[key][0])
+            newNBRPath = os.path.join(filepath,nbrDict[key+1][1],'IMG_DATA',nbrDict[key+1][0])
             oldNBR = gdal.Open(oldNBRPath)
             newNBR = gdal.Open(newNBRPath)
             img_old = oldNBR.ReadAsArray()
@@ -180,11 +176,11 @@ for image in arr:
     moveImage(filepath,image)
     jp2ToTiff(filepath,image)  
     path = readPath(image)
-    resample(filepath,image,"R20m",path,"B12_20m","R10m",10980,10980,"nearest",gdal.GDT_Float32)
-    nir = readBand(filepath,image,"R10m",path,"B08_10m")
-    swir = readBand(filepath,image,"R10m",path,"resampleB12_20m")
+    resample(filepath,image,path,"B12",10980,10980,"nearest",gdal.GDT_Float32)
+    nir = readBand(filepath,image,path,"B08")
+    swir = readBand(filepath,image,path,"resampleB12")
     if(np.all(nir) is not None and np.all(swir) is not None):
-        call_nbr = callNBR(nir,swir,filepath,image,"R10m",path,"B08_10m")
+        call_nbr = callNBR(nir,swir,filepath,image,path,"B08")
         join = path+"NBR.tif"
         nbrArray.append(join)
 
@@ -197,7 +193,7 @@ for nbr, path in zip(sortedNBR,sortedArr):
     nbrDict[counter] = (nbr,path)
     counter += 1
 
-nbrOldNew(nbrDict,filepath,filepath2,"R10m")
+nbrOldNew(nbrDict,filepath,filepath2)
 #for image2 in arr2:
 #    plot(filepath2,image2)
 #plot(filepath2,arr2[2])
