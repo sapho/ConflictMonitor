@@ -32,9 +32,8 @@ RUN wget http://step.esa.int/thirdparties/sen2cor/2.5.5/$SEN2COR_VERSION.run -P 
 # Set path to make Sen2Cor usable
 ENV PATH="/sen2cor/$SEN2COR_VERSION/bin:$PATH"
 
-# Make workspace and copy all files of current directory into it 
-WORKDIR /workspace
-COPY . /workspace
+# Use Saphir's downloaded data @/data/raw/unzipped
+ENV imgfolder = /data/raw/unzipped
 
 # Run apply_sen2cor.py when the container launches
 ENTRYPOINT ["python"]

@@ -26,9 +26,8 @@ RUN apt-get update \
 # Install numpy 
 RUN pip install numpy
 
-# Make workspace and copy all files of current directory into it 
-WORKDIR /workspace
-COPY . /workspace
+# Use Saphir's downloaded data @/data/raw/unzipped
+ENV imgfolder = /data/raw/unzipped
 
 # Run composites.py when the container launches
 ENTRYPOINT ["python"]
