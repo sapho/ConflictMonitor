@@ -8,7 +8,7 @@ import os
 # NOTE: If Level is set to '2A' (default), this script assumes the directory structure created by sen2cor
 # (which creates an additional subfolder "R10m") -> see variable bands_path. Otherwise it assumes
 # the standard directory structure of Sentinel-2 data.
-def create_composites(imgfolder, Level='1C'):
+def create_composites(imgfolder, Level='2A'):
 
     # create folder for composites
     try:
