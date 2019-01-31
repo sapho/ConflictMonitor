@@ -193,9 +193,9 @@ def readPath(image):
     nameDatum = name + datum
     return nameDatum
 
-def readBand(filepath,image,resolution,nameDatum,band):
+def readBand(filepath,image,nameDatum,band):
     print("in readBand")
-    band = os.path.join(filepath,image,'IMG_DATA',resolution, nameDatum + band + '.tif')
+    band = os.path.join(filepath,image,'IMG_DATA', nameDatum + band + '.tif')
     if((os.path.isfile(band))):
         open_band = gdal.Open(band)
         img = open_band.ReadAsArray()
@@ -204,12 +204,12 @@ def readBand(filepath,image,resolution,nameDatum,band):
     else:
         print("file"+ band + " not exists")
 
-def callTiffChangeDetection(bDict,filepath,resolution):
+def callTiffChangeDetection(bDict,filepath):
     print("in nbrOldNew")
     for key in bDict:
         if(key != len(bDict)):
-            oldPath = os.path.join(filepath,bDict[key][1],'IMG_DATA',resolution,bDict[key][0])
-            newPath = os.path.join(filepath,bDict[key+1][1],'IMG_DATA',resolution,bDict[key+1][0])
+            oldPath = os.path.join(filepath,bDict[key][1],'IMG_DATA',bDict[key][0])
+            newPath = os.path.join(filepath,bDict[key+1][1],'IMG_DATA',bDict[key+1][0])
             nameDatum = readPath(bDict[key][1])
             nameDatum2 = readPath(bDict[key+1][1])
             outChangeDetect = nameDatum + nameDatum2 + "B08_ChangeDetection"
@@ -231,9 +231,9 @@ bArray = []
 
 for image in arr:
     path = readPath(image)
-    nir = readBand(filepath,image,"R10m",path,"B08_10m")
+    nir = readBand(filepath,image,path,"B08")
     if(np.all(nir) is not None):
-        join = path+"B08_10m.tif"
+        join = path+"B08.tif"
         bArray.append(join)
 
 sortedB = sorted(bArray, key = datumCharsB)
@@ -245,4 +245,4 @@ for b, path in zip(sortedB,sortedArr):
     bDict[counter] = (b,path)
     counter += 1
 
-callTiffChangeDetection(bDict,filepath,resolution)
+callTiffChangeDetection(bDict,filepath)

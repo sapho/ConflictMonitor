@@ -9,7 +9,6 @@ from gdalconst import *
 from osgeo import osr
 import shutil
 from os import system
-import tiffChangeDetection as tcd
 
 def moveImage(filepath,image):
     imagePath = os.path.join(filepath,image,"GRANULE")
@@ -156,8 +155,6 @@ def nbrOldNew(nbrDict,filepath,filepath2):
             out_format = "GTiff"
             driver = gdal.GetDriverByName(out_format)
             outPath = os.path.join(filepath2,nameDatum + nameDatum2 + 'result_NBR.tif')
-            outChangeDetect = nameDatum + nameDatum2 + "NBROldNew_ChangeDetection"
-            tcd.tiffChangeDetection(oldNBRPath,newNBRPath,outChangeDetect)
             newFile = CreateGeoTiff(outPath,result,driver,xsize,ysize,GeoT,Projection,DataType)
         else:
             print("All NBRs computed")
