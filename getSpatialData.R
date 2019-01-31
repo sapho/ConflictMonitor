@@ -1,14 +1,10 @@
 ## Install packages
 install.packages("devtools")
 devtools::install_github("16EAGLE/getSpatialData")
-install.packages("raster")
-install.packages("sf")
 install.packages("sp")
 
 ## Load packages
 library(getSpatialData)
-library(raster)
-library(sf)
 library(sp)
 
 ## Define a polygon enclosing the Rakhine State of Myanmar as a SpatialPolygons feature
@@ -22,37 +18,39 @@ aoi = SpatialPolygons(list(ps))
 
 proj4string(aoi) = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
 
-# set the SpatialPolygons feature as AOI
+## Set the SpatialPolygons feature as AOI
 set_aoi(aoi)
 
-## After defining a session AOI, define time range and platform
-time_range <-  c("2018-07-01", toString(Sys.Date()))
+## Definition of time ranging a fortnight into the past from current date and definition of platform
+time_range <-  c(toString(Sys.Date() - 14), toString(Sys.Date()))
 platform <- "Sentinel-2" #or "Sentinel-1" or "Sentinel-3"
 
-## set login credentials and archive directory
+## Set login credentials
 login_CopHub(username = "conflictmonitor", password = "conflictmonitor2019")
 
-## Use getSentinel_query to search for data (using the session AOI)
+## Use getSentinel_query to search for data within AOI
 records <- getSentinel_query(time_range = time_range, platform = platform)
 
 ## Filter the records
-colnames(records) #see all available filter attributes
-unique(records$processinglevel) #use one of the, e.g. to see available processing levels
-
 records_filtered <- records[which(records$processinglevel == "Level-1C"),] #filter by Level
 records_filtered <- records_filtered[as.numeric(records_filtered$cloudcoverpercentage) <= 30, ] #filter by clouds
 
-## Download some datasets to your archive directory
-dir.create("/data/")
-dir.create("/data/raw/")
-dir.create("/data/raw/zipped")
+## Download queried datasets to archive directory
+dir.create("/data/raw/zipped", recursive = TRUE)
 set_archive("/data/raw/zipped")
-datasets <- getSentinel_data(records = records_filtered[c(1,5), ])
+datasets <- getSentinel_data(records = records_filtered[c(4,7,9), ])
+##datasets <- getSentinel_data(records = records_filtered)
 
-## Extract datasets to your unzip directory
+## Extract downloaded datasets to unzip directory
 dir.create("/data/raw/unzipped")
 for (i in 0:(length(datasets)-1)) {
   i <- i+1
   unzip (datasets[i], exdir = "/data/raw/unzipped")
 }
 remove(i)
+
+## Copy all JPEG 2000 (jp2) files of each dataset from dispersed subfolders into one dedicated jp2 directory
+ext <- ".jp2"
+unzipped_files <- list.files(path = "/data/raw/unzipped", full.names = TRUE, recursive = TRUE, include.dirs = TRUE)
+dir.create("/data/raw/jp2")
+sapply(unzipped_files[grep(ext, unzipped_files)], FUN=function(x) file.copy(from = x, to = "/data/raw/jp2"))
