@@ -18,7 +18,7 @@ fileList = getfiles()
 gdalTilesBase = ["gdal2tiles.py", "-w", "leaflet"]
 
 for imgFile in fileList:
-    if imgFile.endswith(".jp2") and 'TCI' in imgFile:
+    if imgFile.endswith(".tif") and 'TCI' in imgFile:
         sourcepath = os.path.join(jp2InputDir, imgFile)
         outputpath = os.path.join(layerOutputDir, imgFile).replace('.jp2','')
         gdalTiles = gdalTilesBase + [sourcepath, outputpath]
