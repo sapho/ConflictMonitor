@@ -21,10 +21,12 @@ app.set('port', port, 'Content-Type', 'application/json');
  */
 let server = http.createServer(app);
 
-cmd.debug().run('docker build --no-cache -t basti1 -f ../pre_processing/atmospheric_correction/Dockerfile .')
+cmd.debug().run('docker build --no-cache -t basti_ac -f ../pre_processing/atmospheric_correction/Dockerfile .')
+    .then(() => cmd.run('docker build --no-cache -t basti_c -f ../pre_processing/composites/Dockerfile .'))
     .then(function(){
         startServer();
-    });
+    })
+    .catch((err) => console.error(err));
 
 
 function startServer(){
