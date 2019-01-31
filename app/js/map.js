@@ -32,7 +32,7 @@ let sidebar = L.control.sidebar('sidebar').addTo(map);
 sidebar.open('home');
 
 // FeatureGroup is to store editable layers
-let loadLayer = (layer, method) => {
+let loadLayer = (method) => {
     debugger;
     let pathBefore = 'T46QDJ_20171215T042151_TCI_20m'; //+ pathname before
 
@@ -74,7 +74,7 @@ let loadLayer = (layer, method) => {
                 tms: true
             }).addTo(map);
 
-        //L.control.sideBySide(layerBefore, layerAfter).addTo(map);
+        L.control.sideBySide(layerBefore, layerAfter).addTo(map);
     } else{
         alert("No Change Detection Layer will be displayed")
     };
