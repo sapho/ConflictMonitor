@@ -31,3 +31,5 @@ On Windows:
 docker build -t app/conflict_monitoring .
 docker run -ti -v //var/run/docker.sock://var/run/docker.sock -v /data:/data -p 8080:8080 app/conflict_monitoring
 ```
+
+The Server is running on Port 8080 now.
