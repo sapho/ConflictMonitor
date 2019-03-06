@@ -5,6 +5,9 @@
 let app = require('./app');
 let debug = require('debug')('stml:server');
 let http = require('http');
+let callScripts = require ('./callscripts');
+let dockerCmdJs = require('docker-cmd-js');
+let cmd = new dockerCmdJs.Cmd();
 
 /**
  * Get port from environment and store in Express.
@@ -12,19 +15,29 @@ let http = require('http');
 
 let port = normalizePort(process.env.PORT || '8080');
 app.set('port', port, 'Content-Type', 'application/json');
+
 /**
  * Create HTTP server.
  */
-
 let server = http.createServer(app);
 
-/**
- * Listen on provided port, on all network interfaces.
- */
+cmd.debug().run('docker build --no-cache -t basti_ac -f ../pre_processing/atmospheric_correction/Dockerfile .')
+    .then(() => cmd.run('docker build --no-cache -t basti_c -f ../pre_processing/composites/Dockerfile .'))
+    .then(function(){
+        startServer();
+    })
+    .catch((err) => console.error(err));
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+
+function startServer(){
+    /**
+     * Listen on provided port, on all network interfaces.
+     */
+
+    server.listen(port);
+    server.on('error', onError);
+    server.on('listening', onListening);
+}
 
 /**
  * Normalize a port into a number, string, or false.
@@ -49,7 +62,7 @@ function normalizePort(val) {
 /**
  * Event listener for HTTP server "error" event.
  */
-
+//sudo docker run -p 8080:8080 niklas/node-web-app
 function onError(error) {
     if (error.syscall !== 'listen') {
         throw error;
@@ -84,4 +97,9 @@ function onListening() {
         ? 'pipe ' + addr
         : 'port ' + addr.port;
     debug('Listening on ' + bind);
+
+    console.log('Server listening on Port ' + addr.port);
+
+    //call Scripts when everything is in its place
+    // callScripts.request();
 }
