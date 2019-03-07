@@ -5,34 +5,48 @@ let dockerCmdJs = require('docker-cmd-js');
 let cmd = new dockerCmdJs.Cmd();
 
 exports.request = function (req, res) {
+
+    let options = {
+        mode: 'text',
+        pythonPath: 'path/to/python',
+        pythonOptions: ['-u'], // get print results in real-time
+        scriptPath: 'path/to/my/scripts',
+        args: ['value1', 'value2', 'value3']
+    };
+
     async.waterfall([
         function (callback) {
             R("../getSpatialData.R")
-            .call(function(err, d) {
-                if (err) {
-                    console.log(err);
-                    callback(new Error("getSpatialData.R failed"));
-                } else {
-                    console.log("Success getSpatialData.R")
-                    callback(null);
-                }
-            });   
+                .call(function (err, d) {
+                    if (err) {
+                        console.log(err);
+                        callback(new Error("getSpatialData.R failed"));
+                    } else {
+                        console.log("Success getSpatialData.R")
+                        callback(null);
+                    }
+                });
         },
         function (callback) {
             cmd.debug().run('docker run basti_ac')
-                .then(function(){
+                .then(function () {
                     callback(null)
                 })
-                .catch((err) => { callback(new Error("preprocessing failed with message: " + err)) });
+                .catch((err) => {
+                    callback(new Error("preprocessing failed with message: " + err))
+                });
         },
-            function (callback) {
-                cmd.debug().run('docker run basti_c')
-                    .then(function(){
-                        callback(null)
-                    })
-                    .catch((err) => { callback(new Error("preprocessing failed with message: " + err)) });
-            },
         function (callback) {
+            cmd.debug().run('docker run basti_c')
+                .then(function () {
+                    callback(null)
+                })
+                .catch((err) => { 
+                    callback(new Error("preprocessing failed with message: " + err))
+                });
+        },
+        function (callback) {
+            options.pythonPath = '/usr/bin/python';
             PythonShell.run('../postprocessing/NBR_BOA_Images.py', null, function (err) {
                 if (err) {
                     console.log(err);
@@ -44,6 +58,7 @@ exports.request = function (req, res) {
             });
         },
         function (callback) {
+            options.pythonPath = '/usr/bin/python';
             PythonShell.run('../postprocessing/subset.py', null, function (err) {
                 if (err) {
                     console.log(err);
@@ -56,28 +71,16 @@ exports.request = function (req, res) {
         },
         function (callback) {
             R("../bfast.R")
-            .call(function(err, d) {
-                if (err) {
-                    console.log(err);
-                    callback(new Error("getSpatialData.R failed"));
-                } else {
-                    console.log("Success getSpatialData.R")
-                    callback(null);
-                }
-            });
-        } /*,
-        function (callback) { // Dummy
-            PythonShell.run('../dummy/dummy', null, function (err) {
-                if (err) {
-                    console.log(err);
-                    callback(new Error("dummy failed"));
-                } else {
-                    console.log("Success dummy");
-                    callback(null);
-                }
-            });
-        }
-*/
+                .call(function (err, d) {
+                    if (err) {
+                        console.log(err);
+                        callback(new Error("getSpatialData.R failed"));
+                    } else {
+                        console.log("Success getSpatialData.R")
+                        callback(null);
+                    }
+                });
+        } 
     ], function (err, code, result) {
         if (err) {
             if (!err.message) {
